@@ -1,15 +1,15 @@
 import { formatDate } from '@/lib/utils';
-import { Asset } from '@/types';
+import { Item } from '@/types';
 import React from 'react';
 
 interface ModalViewDetailProps {
     isOpen: boolean;
     onClose: () => void;
-    asset: Asset | null;
+    item: Item | null;
 }
 
-const ModalViewDetail: React.FC<ModalViewDetailProps> = ({ isOpen, onClose, asset }) => {
-    if (!isOpen || !asset) return null;
+const ModalViewDetail: React.FC<ModalViewDetailProps> = ({ isOpen, onClose, item }) => {
+    if (!isOpen || !item) return null;
 
     return (
         <div className="
@@ -37,27 +37,19 @@ const ModalViewDetail: React.FC<ModalViewDetailProps> = ({ isOpen, onClose, asse
 
                 {/* CONTENT (scrollable) */}
                 <div className="space-y-4 overflow-y-auto max-h-[60vh] pr-2">
-                    <DetailItem label="Entity" value={asset.entity} />
-                    <DetailItem label="Kode Asset" value={asset.kode_aset || '-'} />
-                    <DetailItem label="Kode Asset Temuan" value={asset.kode_aset_temuan || '-'} />
-                    <DetailItem label="Deskripsi" value={asset.deskripsi || '-'} />
-                    <DetailItem label="PIC / Dept" value={asset.pic_dept || '-'} />
-                    <DetailItem label="Lokasi" value={asset.lokasi || '-'} />
-                    <DetailItem label="Status" value={asset.status || '-'} />
-                    <DetailItem label="Qty" value={asset.qty ?? '-'} />
-                    <DetailItem label="Qty Actual" value={asset.qty_actual ?? '-'} />
-                    <DetailItem label="Kondisi" value={asset.kondisi || '-'} />
-                    <DetailItem label="Remarks" value={asset.remarks || '-'} />
-                    <DetailItem label="Tanggal Scan" value={asset.tgl_scan ? formatDate(`${asset.tgl_scan}`) : '-'} />
-                    {asset.details && asset.details.length > 0 && (
+                    <DetailItem label="Item Code" value={item.item_code} />
+                    <DetailItem label="PO Number" value={item.number_po || '-'} />
+                    <DetailItem label="Descriptions" value={item.description || '-'} />
+
+                    {item.details && item.details.length > 0 && (
                         <div>
                             <label className="font-medium text-sm">Photos</label>
 
                             <div className="grid grid-cols-2 gap-2 mt-2">
-                                {asset.details.map((detail) => (
+                                {item.details.map((detail) => (
                                     <img
                                         key={detail.id}
-                                        src={detail.photo}
+                                        src={detail.image}
                                         alt="Asset"
                                         className="w-full h-40 object-cover rounded border"
                                     />

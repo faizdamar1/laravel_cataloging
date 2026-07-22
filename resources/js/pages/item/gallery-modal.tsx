@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 import { MapPin, ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { Asset } from '@/types';
+import { Item } from '@/types';
 
 interface GalleryModalProps {
-    asset: Asset | null;
+    item: Item | null;
     initialIndex: number;
     onClose: () => void;
 }
 
-export default function GalleryModal({ asset, initialIndex, onClose }: GalleryModalProps) {
-    if (!asset) return null;
+export default function GalleryModal({ item, initialIndex, onClose }: GalleryModalProps) {
+    if (!item) return null;
 
     const [currentIndex, setCurrentIndex] = useState(initialIndex || 0);
-    const images = asset.details || [];
+    const images = item.details || [];
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-forest-900/95 backdrop-blur-sm">
@@ -20,10 +20,10 @@ export default function GalleryModal({ asset, initialIndex, onClose }: GalleryMo
                 {/* Header Modal */}
                 <div className="flex justify-between items-start text-white mb-4">
                     <div>
-                        <h2 className="text-2xl font-bold text-forest-100">{asset.kode_aset}</h2>
-                        <p className="text-base text-gray-200 mt-1">{asset.deskripsi}</p>
+                        <h2 className="text-2xl font-bold text-forest-100">{item.item_code}</h2>
+                        <p className="text-base text-gray-200 mt-1">{item.description}</p>
                         <p className="text-sm text-gray-400 mt-1 flex items-center gap-1">
-                            <MapPin size={14} /> {asset.lokasi}
+                            <MapPin size={14} /> {item.number_po}
                         </p>
                     </div>
                     <button
@@ -38,7 +38,7 @@ export default function GalleryModal({ asset, initialIndex, onClose }: GalleryMo
                 <div className="relative grow flex items-center justify-center overflow-hidden bg-black/50 rounded-xl border border-white/10">
                     {images.length > 0 ? (
                         <img
-                            src={images[currentIndex]?.photo}
+                            src={images[currentIndex]?.image}
                             alt="Preview"
                             className="max-w-full max-h-full object-contain"
                         />
@@ -74,7 +74,7 @@ export default function GalleryModal({ asset, initialIndex, onClose }: GalleryMo
                                 className={`shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 transition-all ${currentIndex === idx ? 'border-forest-3000 opacity-100 scale-105 shadow-[0_0_15px_rgba(107,201,173,0.5)]' : 'border-transparent opacity-40 hover:opacity-100'
                                     }`}
                             >
-                                <img src={detail.photo} alt={`Thumb ${idx}`} className="w-full h-full object-cover" />
+                                <img src={detail.image} alt={`Thumb ${idx}`} className="w-full h-full object-cover" />
                             </button>
                         ))}
                     </div>

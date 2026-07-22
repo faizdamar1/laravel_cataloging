@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Search, Box } from 'lucide-react';
-import { type SharedData, Asset } from '@/types';
+import { type SharedData, Item } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { dashboard, login } from '@/routes';
-import { MOCK_ASSETS } from './mock-assets';
-import AssetCard from './asset-card';
-import GalleryModal from './gallery-modal';
+import ItemCard from './item/item-card';
+import GalleryModal from './item/gallery-modal';
+import { MOCK_ITEMS } from './item/mock-item';
 
 
 export default function CatalogApp() {
@@ -15,27 +15,26 @@ export default function CatalogApp() {
 
     interface GalleryState {
         isOpen: boolean;
-        asset: Asset | null;
+        item: Item | null;
         initialIndex: number;
     }
-    const [galleryState, setGalleryState] = useState<GalleryState>({ isOpen: false, asset: null, initialIndex: 0 });
+    const [galleryState, setGalleryState] = useState<GalleryState>({ isOpen: false, item: null, initialIndex: 0 });
 
-    const filteredAssets = MOCK_ASSETS.filter((asset) => {
+    const filtereditems = MOCK_ITEMS.filter((item) => {
         const term = searchTerm.toLowerCase();
         return (
-            asset.kode_aset.toLowerCase().includes(term) ||
-            (asset.kode_aset_temuan && asset.kode_aset_temuan.toLowerCase().includes(term)) ||
-            asset.deskripsi.toLowerCase().includes(term) ||
-            asset.lokasi.toLowerCase().includes(term)
+            item.item_code.toLowerCase().includes(term) ||
+            item.description.toLowerCase().includes(term) ||
+            item.number_po.toLowerCase().includes(term)
         );
     });
 
-    const openGallery = (asset: Asset, index: number) => {
-        setGalleryState({ isOpen: true, asset, initialIndex: index });
+    const openGallery = (item: Item, index: number) => {
+        setGalleryState({ isOpen: true, item, initialIndex: index });
     };
 
     const closeGallery = () => {
-        setGalleryState({ isOpen: false, asset: null, initialIndex: 0 });
+        setGalleryState({ isOpen: false, item: null, initialIndex: 0 });
     };
 
     return (
@@ -58,34 +57,19 @@ export default function CatalogApp() {
                         {/* Auth Actions */}
                         <div className="flex items-center gap-3">
                             {auth.user ? (
-
                                 <Link
-
                                     href={dashboard()}
-
-                                    className="rounded-md  bg-forest-600 bg-forest-5000 px-6 py-2 text-sm font-semibold text-white hover:bg-forest-300 transition"
-
-                                >
-
+                                    className="rounded-md  bg-forest-600 bg-forest-5000 px-6 py-2 text-sm font-semibold text-white hover:bg-forest-300 transition">
                                     Masuk Dashboard
-
                                 </Link>
-
                             ) : (
-
                                 <>
-
                                     <Link
-
                                         href={login()}
-
-                                        className="rounded-md border border-forest-500 px-6 py-2 text-sm font-semibold text-forest-500 hover:bg-forest-500 hover:text-white transition"
-
-                                    >
+                                        className="rounded-md border border-forest-500 px-6 py-2 text-sm font-semibold text-forest-500 hover:bg-forest-500 hover:text-white transition">
                                         Login
                                     </Link>
                                 </>
-
                             )}
                         </div>
                     </div>
@@ -130,22 +114,22 @@ export default function CatalogApp() {
                         <div>
                             <h2 className="text-2xl font-bold text-forest-900 tracking-tight">Katalog Aset</h2>
                             <p className="text-sm text-gray-500 mt-1">
-                                Menampilkan {filteredAssets.length} hasil pencarian
+                                Menampilkan {filtereditems.length} hasil pencarian
                             </p>
                         </div>
                     </div>
 
-                    {filteredAssets.length > 0 ? (
+                    {filtereditems.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                            {filteredAssets.map((asset) => (
-                                <AssetCard key={asset.id} asset={asset} openGallery={openGallery} />
+                            {filtereditems.map((item) => (
+                                <ItemCard key={item.id} item={item} openGallery={openGallery} />
                             ))}
                         </div>
                     ) : (
                         <div className="text-center py-20 bg-forest-50/30 rounded-2xl border border-dashed border-forest-200">
                             <Box className="mx-auto h-16 w-16 text-forest-200 mb-4" />
-                            <h3 className="text-lg font-medium text-forest-800">Aset tidak ditemukan</h3>
-                            <p className="text-sm text-gray-500 mt-1">Coba gunakan kata kunci lain (contoh: Genset, AST-001).</p>
+                            <h3 className="text-lg font-medium text-forest-800">Item tidak ditemukan</h3>
+                            <p className="text-sm text-gray-500 mt-1">Coba gunakan kata kunci lain (Item code, PO Number, Description).</p>
                         </div>
                     )}
                 </section>
@@ -155,7 +139,7 @@ export default function CatalogApp() {
             {/* Render Modal if Open */}
             {galleryState.isOpen && (
                 <GalleryModal
-                    asset={galleryState.asset}
+                    item={galleryState.item}
                     initialIndex={galleryState.initialIndex}
                     onClose={closeGallery}
                 />

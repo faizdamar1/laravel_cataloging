@@ -70,7 +70,6 @@ export interface User {
     created_at: string;
     updated_at: string;
 
-    attempts?: ExamAttempts[];
     [key: string]: unknown; // This allows for additional properties...
 }
 

@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
 import { Search, Image as ImageIcon, MapPin, CheckCircle2, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Asset } from '@/types';
+import { Item } from '@/types';
 
-interface AssetCardProps {
-    asset: Asset;
-    openGallery: (asset: Asset, index: number) => void;
+interface ItemCardProps {
+    item: Item;
+    openGallery: (item: Item, index: number) => void;
 }
 
-export default function AssetCard({ asset, openGallery }: AssetCardProps) {
+export default function ItemCard({ item, openGallery }: ItemCardProps) {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-    // Menggunakan array details dari interface Asset
-    const hasImages = asset.details && asset.details.length > 0;
-    const mainImage = hasImages ? asset.details![currentImageIndex].photo : null;
-    const totalImages = hasImages ? asset.details!.length : 0;
+
+    const hasImages = item.details && item.details.length > 0;
+    const mainImage = hasImages ? item.details![currentImageIndex].image : null;
+    const totalImages = hasImages ? item.details!.length : 0;
 
     const nextImage = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -31,13 +31,13 @@ export default function AssetCard({ asset, openGallery }: AssetCardProps) {
             {/* Gambar Utama / Thumbnail Slider */}
             <div
                 className="relative h-56 bg-gray-50 flex items-center justify-center group cursor-pointer"
-                onClick={() => hasImages && openGallery(asset, currentImageIndex)}
+                onClick={() => hasImages && openGallery(item, currentImageIndex)}
             >
                 {hasImages ? (
                     <>
                         <img
                             src={mainImage!}
-                            alt={asset.kode_aset}
+                            alt={item.item_code}
                             className="w-full h-full object-cover"
                         />
 
@@ -73,46 +73,25 @@ export default function AssetCard({ asset, openGallery }: AssetCardProps) {
                     </div>
                 )}
 
-                {/* Status Badge */}
-                <div className="absolute top-3 right-3">
-                    {asset.status === 'Found' ? (
-                        <span className="flex items-center gap-1 bg-forest-50 text-forest-700 text-xs font-bold px-2 py-1 rounded shadow-sm border border-forest-200/50">
-                            <CheckCircle2 size={12} /> Found
-                        </span>
-                    ) : (
-                        <span className="flex items-center gap-1 bg-red-50 text-red-700 text-xs font-bold px-2 py-1 rounded shadow-sm border border-red-200">
-                            <XCircle size={12} /> Not Found
-                        </span>
-                    )}
-                </div>
+
             </div>
 
             {/* Info Asset */}
             <div className="p-5 grow flex flex-col">
                 <div className="mb-2">
                     <span className="text-xs font-bold text-forest-400 tracking-wider uppercase">
-                        {asset.kode_aset}
+                        {item.item_code}
                     </span>
                 </div>
 
                 <h3 className="font-semibold text-forest-900 text-base leading-snug mb-3 line-clamp-2">
-                    {asset.deskripsi}
+                    {item.description}
                 </h3>
 
                 <div className="space-y-2 mt-auto">
                     <div className="flex items-start text-sm text-gray-600">
                         <MapPin size={14} className="mr-2 mt-0.5 shrink-0 text-forest-300" />
-                        <span className="line-clamp-1">{asset.lokasi}</span>
-                    </div>
-                    <div className="flex justify-between items-center bg-gray-50 rounded p-2 border border-gray-100">
-                        <div className="text-xs">
-                            <span className="text-gray-500 block">Kondisi</span>
-                            <span className="font-medium text-forest-800">{asset.kondisi}</span>
-                        </div>
-                        <div className="text-xs text-right">
-                            <span className="text-gray-500 block">Qty (Actual)</span>
-                            <span className="font-medium text-forest-800">{asset.qty_actual} / {asset.qty}</span>
-                        </div>
+                        <span className="line-clamp-1">{item.number_po}</span>
                     </div>
                 </div>
             </div>

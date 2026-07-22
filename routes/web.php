@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Admin\ItemController;
+use App\Http\Controllers\Admin\ItemController as AdminItemController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
@@ -18,16 +18,16 @@ Route::middleware(['auth', 'isActive'])->group(function () {});
 
 Route::middleware('auth')->group(function () {
 
-    Route::get('/admin/asset', [ItemController::class, 'index'])->middleware('roles:1')->name('admin.asset.index');
-    Route::get('/admin/asset/create', [ItemController::class, 'create'])->middleware('roles:1')->name('admin.asset.create');
-    Route::post('/admin/asset/store', [ItemController::class, 'store'])->middleware('roles:1')->name('admin.asset.store');
-    Route::get('/admin/asset/{asset}/edit', [ItemController::class, 'edit'])->middleware('roles:1')->name('admin.asset.edit');
-    Route::put('/admin/asset/{asset}/update', [ItemController::class, 'update'])->middleware('roles:1')->name('admin.asset.update');
-    Route::delete('/admin/asset/{asset}/delete', [ItemController::class, 'destroy'])->middleware('roles:1')->name('name.user.destroy');
-    Route::get('/admin/asset/export', [ItemController::class, 'export'])->middleware('roles:1')->name('admin.asset.export');
-    Route::get('/admin/asset/import', [ItemController::class, 'import'])->middleware('roles:1')->name('admin.asset.import');
-    Route::post('/admin/asset/process_import', [ItemController::class, 'processImport'])->middleware('roles:1')->name('admin.asset.process_import');
-    Route::get('/admin/asset/import/template', [ItemController::class, 'downloadTemplate'])->middleware('roles:1')->name('admin.asset.import.template');
+    Route::get('/admin/item', [AdminItemController::class, 'index'])->middleware('roles:1')->name('admin.item.index');
+    Route::get('/admin/item/create', [AdminItemController::class, 'create'])->middleware('roles:1')->name('admin.item.create');
+    Route::post('/admin/item/store', [AdminItemController::class, 'store'])->middleware('roles:1')->name('admin.item.store');
+    Route::get('/admin/item/{item}/edit', [AdminItemController::class, 'edit'])->middleware('roles:1')->name('admin.item.edit');
+    Route::put('/admin/item/{item}/update', [AdminItemController::class, 'update'])->middleware('roles:1')->name('admin.item.update');
+    Route::delete('/admin/item/{item}/delete', [AdminItemController::class, 'destroy'])->middleware('roles:1')->name('name.user.destroy');
+    Route::get('/admin/item/export', [AdminItemController::class, 'export'])->middleware('roles:1')->name('admin.item.export');
+    Route::get('/admin/item/import', [AdminItemController::class, 'import'])->middleware('roles:1')->name('admin.item.import');
+    Route::post('/admin/item/process_import', [AdminItemController::class, 'processImport'])->middleware('roles:1')->name('admin.item.process_import');
+    Route::get('/admin/item/import/template', [AdminItemController::class, 'downloadTemplate'])->middleware('roles:1')->name('admin.item.import.template');
 
     // user
     Route::get('/admin/user', [AdminUserController::class, 'index'])->middleware('roles:1')->name('admin.user.index');

@@ -19,7 +19,7 @@ class Item extends Model
     /**
      * Mendapatkan daftar detail (termasuk foto) untuk aset ini.
      */
-    public function details(): HasMany
+    public function details()
     {
         return $this->hasMany(ItemDetail::class);
     }
