@@ -30,7 +30,7 @@ export const formatDate = (dateString: string) => {
     }).format(date);
 };
 
-export const formatTime = (timeLeft:number): string => {
+export const formatTime = (timeLeft: number): string => {
     const m = Math.floor(timeLeft / 60);
     const s = timeLeft % 60;
     return `${m}:${s.toString().padStart(2, "0")}`;
@@ -53,5 +53,16 @@ export const generateRandomToken = (length = 5): string => {
     }
 
     return result;
+};
+
+export const formatSize = (bytes: number) => {
+
+    if (bytes < 1024)
+        return bytes + " B";
+
+    if (bytes < 1024 * 1024)
+        return (bytes / 1024).toFixed(1) + " KB";
+
+    return (bytes / (1024 * 1024)).toFixed(2) + " MB";
 };
 

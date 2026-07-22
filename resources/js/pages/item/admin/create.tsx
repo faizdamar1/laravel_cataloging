@@ -1,212 +1,193 @@
-import AppLayout from '@/layouts/app-layout';
-import { dashboard } from '@/routes';
-import { BreadcrumbItem } from '@/types';
-import { Head, useForm } from '@inertiajs/react';
-import { useState } from 'react';
+import AppLayout from "@/layouts/app-layout";
+import { dashboard } from "@/routes";
+import { BreadcrumbItem } from "@/types";
+import { Head, useForm } from "@inertiajs/react";
+import { useState } from "react";
+import { useDropzone } from "react-dropzone";
+import imageCompression from "browser-image-compression";
+import { PhotoIcon, TrashIcon } from "@heroicons/react/24/outline";
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: dashboard().url },
-    { title: 'Assets', href: '/admin/asset' },
-    { title: 'Create Asset', href: '' },
+    { title: "Dashboard", href: dashboard().url },
+    { title: "Items", href: "/admin/item" },
+    { title: "Create Item", href: "" },
 ];
 
-const CreateAsset = () => {
-    // State lokal untuk menentukan apakah ini "Temuan" atau "Aset Terdaftar"
-    const [isTemuan, setIsTemuan] = useState<boolean>(false);
+interface PreviewImage {
+    file: File;
+    preview: string;
+    originalSize: number;
+    compressedSize: number;
+}
+
+export default function CreateItem() {
+    const [previewImages, setPreviewImages] = useState<PreviewImage[]>([]);
 
     const { data, setData, post, errors, reset, processing } = useForm({
-        kode_aset: '',
-        kode_aset_temuan: '',
-        deskripsi: '',
-        pic_dept: '',
-        lokasi: '',
-        status: 'Found',
-        kondisi: '',
-        remarks: '',
-        qty: 1,
-        entity: '',
+        item_code: "",
+        number_po: "",
+        description: "",
+        photos: [] as File[],
     });
 
-    const handleTipeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const val = e.target.value === 'temuan';
-        setIsTemuan(val);
-
-        // Reset field yang berlawanan agar data tetap bersih
-        if (val) {
-            setData('kode_aset', '');
-        } else {
-            setData('kode_aset_temuan', '');
-        }
+    const formatSize = (bytes: number) => {
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+        return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
     };
+
+    const compressFiles = async (files: File[]) => {
+        return Promise.all(
+            files.map(file =>
+                imageCompression(file, {
+                    maxSizeMB: 0.09,
+                    maxWidthOrHeight: 800,
+                    initialQuality: 0.7,
+                    useWebWorker: true,
+                    fileType: 'image/jpeg',
+                })
+            )
+        );
+    };
+
+    const onDrop = async (acceptedFiles: File[]) => {
+        const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+        const invalidFiles = acceptedFiles.filter(file => file.size > MAX_FILE_SIZE);
+
+        if (invalidFiles.length > 0) {
+            alert("Maksimal ukuran setiap gambar adalah 5 MB.");
+            return;
+        }
+
+        const compressed = await compressFiles(acceptedFiles);
+
+        const newPreview = compressed.map((file, index) => ({
+            file,
+            preview: URL.createObjectURL(file),
+            originalSize: acceptedFiles[index].size,
+            compressedSize: file.size,
+        }));
+
+        setPreviewImages(prev => [...prev, ...newPreview]);
+        setData("photos", [...data.photos, ...compressed]);
+    };
+
+    const removeImage = (index: number) => {
+        URL.revokeObjectURL(previewImages[index].preview);
+
+        setPreviewImages(prev => prev.filter((_, i) => i !== index));
+        setData("photos", data.photos.filter((_, i) => i !== index));
+    };
+
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({
+        multiple: true,
+        accept: { "image/*": [] },
+        onDrop,
+    });
 
     const onSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post('/admin/asset/store', {
-            onSuccess: () => reset(),
+
+        post("/admin/item/store", {
+            forceFormData: true,
+            onSuccess: () => {
+                previewImages.forEach(x => URL.revokeObjectURL(x.preview));
+                setPreviewImages([]);
+                reset();
+            },
         });
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Create Asset" />
+            <Head title="Create Item" />
 
-            <h1 className="hidden md:block text-xl font-semibold px-4 mt-4 dark:text-gray-100">
-                Create Asset
-            </h1>
+            <div className="m-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+                <h1 className="mb-6 text-2xl font-bold">Create Item</h1>
 
-            <div className="bg-white dark:bg-gray-900 flex-1 p-6 m-4 mt-2 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-                <form onSubmit={onSubmit} className="space-y-6">
+                <form onSubmit={onSubmit} className="">
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* 1. DROPDOWN LOGIC */}
-                        <div className="md:col-span-2 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg border border-dashed border-gray-300 dark:border-gray-600">
-                            <label className="block text-sm font-bold mb-2 text-forest-600 dark:text-forest-400">
-                                Jenis Input Aset
-                            </label>
-                            <select
-                                onChange={handleTipeChange}
-                                className="mt-1 block w-full p-2.5 rounded-md border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-forest-500"
-                            >
-                                <option value="regular">Aset Terdaftar (Kode Aset Normal)</option>
-                                <option value="temuan">Aset Temuan (Kode Aset Temuan)</option>
-                            </select>
-                        </div>
+                    <div className="space-y-5 lg:col-span-2">
 
-                        {/* ENTITY (Contoh field pendamping di baris yang sama) */}
                         <div>
-                            <label className="block text-sm font-medium mb-1">Entity</label>
-                            <input
-                                type="text"
-                                value={data.entity}
-                                onChange={(e) => setData('entity', e.target.value)}
-                                className="mt-1 block w-full p-2 rounded-md border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-                            />
+                            <label className="mb-2 block text-sm font-semibold">Item Code</label>
+                            <input type="text" value={data.item_code} onChange={e => setData("item_code", e.target.value)} className="w-full rounded-xl border border-gray-300 p-3 focus:border-forest-500 focus:ring-forest-500" />
+                            {errors.item_code && <p className="mt-1 text-sm text-red-500">{errors.item_code}</p>}
                         </div>
 
-
-                        {!isTemuan ? (
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Kode Asset</label>
-                                <input
-                                    type="text"
-                                    value={data.kode_aset}
-                                    onChange={(e) => setData('kode_aset', e.target.value)}
-                                    className={`mt-1 block w-full p-2 rounded-md border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 ${errors.kode_aset ? 'border-red-500' : ''}`}
-                                    placeholder="Masukkan kode aset resmi..."
-                                    required
-                                />
-                                {errors.kode_aset && <p className="text-red-500 text-sm mt-1">{errors.kode_aset}</p>}
-                            </div>
-                        ) : (
-                            <div>
-                                <label className="block text-sm font-medium mb-1 text-orange-600">Kode Asset Temuan</label>
-                                <input
-                                    type="text"
-                                    value={data.kode_aset_temuan}
-                                    onChange={(e) => setData('kode_aset_temuan', e.target.value)}
-                                    className={`mt-1 block w-full p-2 rounded-md border bg-orange-50 dark:bg-gray-800 border-orange-300 dark:border-orange-600 focus:ring-orange-500 ${errors.kode_aset_temuan ? 'border-red-500' : ''}`}
-                                    placeholder="Masukkan kode temuan..."
-                                    required
-                                />
-                                {errors.kode_aset_temuan && <p className="text-red-500 text-sm mt-1">{errors.kode_aset_temuan}</p>}
-                            </div>
-                        )}
-
-
-                    </div>
-
-                    <hr className="border-gray-100 dark:border-gray-700" />
-
-                    <div>
-                        <label className="block text-sm font-medium mb-1">Deskripsi</label>
-                        <textarea
-                            value={data.deskripsi}
-                            onChange={(e) => setData('deskripsi', e.target.value)}
-                            rows={3}
-                            className={`mt-1 block w-full p-2 rounded-md border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 ${errors.deskripsi ? 'border-red-500' : ''}`}
-                        />
-                    </div>
-
-                    {/* FIELD LAINNYA */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium mb-1">Status</label>
-                            <select
-                                value={data.status}
-                                onChange={(e) => setData('status', e.target.value)}
-                                className="mt-1 block w-full p-2 rounded-md border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-                            >
-                                <option value="Found">Found</option>
-                                <option value="Not Found">Not Found</option>
-                            </select>
+                            <label className="mb-2 block text-sm font-semibold">PO Number</label>
+                            <input type="text" value={data.number_po} onChange={e => setData("number_po", e.target.value)} className="w-full rounded-xl border border-gray-300 p-3 focus:border-forest-500 focus:ring-forest-500" />
+                            {errors.number_po && <p className="mt-1 text-sm text-red-500">{errors.number_po}</p>}
                         </div>
+
                         <div>
-                            <label className="block text-sm font-medium mb-1">Quantity</label>
-                            <input
-                                type="number"
-                                value={data.qty}
-                                onChange={(e) => setData('qty', parseInt(e.target.value))}
-                                className="mt-1 block w-full p-2 rounded-md border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-                            />
+                            <label className="mb-2 block text-sm font-semibold">Description</label>
+                            <textarea rows={6} value={data.description} onChange={e => setData("description", e.target.value)} className="w-full rounded-xl border border-gray-300 p-3 focus:border-forest-500 focus:ring-forest-500" />
+                            {errors.description && <p className="mt-1 text-sm text-red-500">{errors.description}</p>}
                         </div>
-                    </div>
 
-
-                    <div>
-                        <label className="block text-sm font-medium mb-1">Condition</label>
-                        <select
-                            value={data.kondisi}
-                            onChange={(e) => setData('kondisi', e.target.value)}
-                            className="mt-1 block w-full p-2 rounded-md border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-                        >
-                            <option value="Found">Good</option>
-                            <option value="Not Found">Not Good</option>
-                        </select>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium mb-1">Remarks</label>
-                        <textarea
-                            value={data.remarks}
-                            onChange={(e) => setData('remarks', e.target.value)}
-                            rows={3}
-                            className={`mt-1 block w-full p-2 rounded-md border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 ${errors.deskripsi ? 'border-red-500' : ''}`}
-                        />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Department (PIC)</label>
-                            <input
-                                type="text"
-                                value={data.pic_dept}
-                                onChange={(e) => setData('pic_dept', e.target.value)}
-                                className="mt-1 block w-full p-2 rounded-md border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Lokasi</label>
-                            <input
-                                type="text"
-                                value={data.lokasi}
-                                onChange={(e) => setData('lokasi', e.target.value)}
-                                className="mt-1 block w-full p-2 rounded-md border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-                            />
-                        </div>
 
+                        <label className="mb-2 block text-sm font-semibold">Images</label>
+
+                        <div {...getRootProps()} className={`rounded-2xl border-2 border-dashed p-8 text-center transition cursor-pointer ${isDragActive ? "border-forest-600 bg-forest-50" : "border-gray-300 hover:border-forest-500"}`}>
+                            <input {...getInputProps()} />
+                            <PhotoIcon className="mx-auto mb-3 h-12 w-12 text-gray-400" />
+                            <p className="font-semibold">Drag & Drop Images</p>
+                            <p className="mt-1 text-sm text-gray-500">atau klik untuk memilih gambar</p>
+                            <p className="mt-2 text-xs text-gray-400">JPG • PNG • WEBP</p>
+                        </div>
                     </div>
 
-                    {/* SUBMIT */}
-                    <button
-                        type="submit"
-                        disabled={processing}
-                        className="w-full bg-forest-600 text-white font-semibold py-3 rounded-md hover:bg-forest-700 transition"
-                    >
-                        {processing ? 'Processing...' : 'Submit Asset'}
-                    </button>
+                    {previewImages.length > 0 && (
+                        <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
+                            {previewImages.map((image, index) => {
+                                const saved = Math.round((1 - image.compressedSize / image.originalSize) * 100);
+
+                                return (
+                                    <div key={index} className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                                        <img src={image.preview} className="aspect-square w-full object-cover" />
+
+                                        <div className="space-y-1 p-3 text-sm">
+                                            <div className="truncate font-semibold">{image.file.name}</div>
+
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-500">Original</span>
+                                                <span>{formatSize(image.originalSize)}</span>
+                                            </div>
+
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-500">Compressed</span>
+                                                <span className="font-medium text-green-600">{formatSize(image.compressedSize)}</span>
+                                            </div>
+
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-500">Saved</span>
+                                                <span className="font-bold text-forest-600">{saved}%</span>
+                                            </div>
+
+                                            <button type="button" onClick={() => removeImage(index)} className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-red-50 py-2 text-red-600 transition hover:bg-red-100">
+                                                <TrashIcon className="h-4 w-4" />
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    <div className="lg:col-span-3">
+                        <button type="submit" disabled={processing} className="w-full rounded-xl bg-forest-600 py-3 font-semibold text-white transition hover:bg-forest-700 disabled:opacity-50">
+                            {processing ? "Saving..." : "Save Item"}
+                        </button>
+                    </div>
                 </form>
             </div>
         </AppLayout>
     );
-};
-
-export default CreateAsset;
+}

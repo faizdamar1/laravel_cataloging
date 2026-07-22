@@ -29,15 +29,11 @@ class ItemController extends Controller
             $validated = $request->validate([
                 'search' => 'nullable|string|max:255',
                 'sort' => 'nullable|in:ASC,DESC',
-                'type' => 'nullable|in:Asset,Temuan',
-                'entity' => 'nullable|string',
                 'perpage' => 'nullable|integer|min:1|max:50',
             ]);
 
             $search = $validated['search'] ?? $defaultSearch;
             $sort = $validated['sort'] ?? $defaultSort;
-            $type = $validated['type'] ?? $defaultType;
-            $entity = $validated['entity'] ?? $defaultEntity;
             $perpage = $validated['perpage'] ?? $defaultPerPage;
         } catch (ValidationException $e) {
             $search = $defaultSearch;
@@ -50,7 +46,7 @@ class ItemController extends Controller
         $query = Item::with('details')
             ->when($search, function ($q) use ($search) {
                 $q->where(function ($q) use ($search) {
-                    $q->where('deskripsi', 'like', "%{$search}%")
+                    $q->where('description', 'like', "%{$search}%")
                         ->orWhere('item_code', 'like', "%{$search}%")
                         ->orWhere('number_po', 'like', "%{$search}%");
                 });

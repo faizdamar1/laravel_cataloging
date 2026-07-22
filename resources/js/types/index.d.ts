@@ -3,6 +3,13 @@ import { InertiaLinkProps } from '@inertiajs/react';
 import { LucideIcon } from 'lucide-react';
 import type { User } from './user';
 
+interface PreviewImage {
+    file: File;
+    preview: string;
+    originalSize: number;
+    compressedSize: number;
+}
+
 export interface ItemDetail {
     id: number;
     item_id: number;

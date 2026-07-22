@@ -65,6 +65,11 @@ const ItemListPage = ({ items }: ItemInterface) => {
         getData();
     };
 
+    const handleChangePerpage = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        perpage.current = Number(event.target.value);
+        getData();
+    };
+
     const getData = (page: number = items.current_page) => {
         setIsLoading(true);
         router.get(
@@ -188,6 +193,19 @@ const ItemListPage = ({ items }: ItemInterface) => {
 
                         {/* Left controls: Bungkus dengan flex-wrap agar ikon tidak keluar layar di HP jadul */}
                         <div className="flex flex-wrap items-center gap-3">
+                            <select
+                                className="text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 rounded-lg py-2 px-4 shadow-sm focus:ring-2 focus:ring-forest-500/40 focus:border-forest-500"
+                                id="pagination-select"
+                                name="perpage"
+                                value={perpage.current}
+                                onChange={handleChangePerpage}
+                            >
+                                {[10, 20, 30, 40, 50].map((n) => (
+                                    <option key={n} value={n}>
+                                        {n}
+                                    </option>
+                                ))}
+                            </select>
 
                             {/* Search: Pastikan komponen TableSearch punya class w-full atau min-w-0 agar fleksibel */}
                             <div className="flex-1 min-w-50">
