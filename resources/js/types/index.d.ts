@@ -3,32 +3,22 @@ import { InertiaLinkProps } from '@inertiajs/react';
 import { LucideIcon } from 'lucide-react';
 import type { User } from './user';
 
-export interface Asset {
+export interface ItemDetail {
     id: number;
-    kode_aset: string;
-    kode_aset_temuan: string;
-    entity: string;
-    deskripsi: string;
-    pic_dept: string;
-    status: 'Found' | 'Not Found';
-    kondisi: string;
-    remarks: string;
-    lokasi: string;
-    qty: number;
-    qty_actual: number | '';
-    created_by: number;
-    user: User;
-    tgl_scan: string;
-    photo?: string;
-    details?: AssetDetail[];
+    item_id: number;
+    image: string;
+    created_at?: string;
+    updated_at?: string;
 }
 
-export interface AssetDetail {
+export interface Item {
     id: number;
-    asset_id: number;
-    photo: string;
-    created_at: string;
-    updated_at: string;
+    item_code: string;
+    number_po: string;
+    description: string;
+    details?: ItemDetail[];
+    created_at?: string;
+    updated_at?: string;
 }
 
 export interface Auth {
