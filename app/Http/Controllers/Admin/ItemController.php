@@ -22,8 +22,6 @@ class ItemController extends Controller
         $defaultSearch = '';
         $defaultSort = 'ASC';
         $defaultPerPage = 10;
-        $defaultType = '';
-        $defaultEntity = '';
 
         try {
             $validated = $request->validate([
@@ -38,8 +36,6 @@ class ItemController extends Controller
         } catch (ValidationException $e) {
             $search = $defaultSearch;
             $sort = $defaultSort;
-            $type = $defaultType;
-            $entity = $defaultEntity;
             $perpage = $defaultPerPage;
         }
 
@@ -72,6 +68,8 @@ class ItemController extends Controller
             'kode_aset' => 'nullable|string|max:255',
             'kode_aset_temuan' => 'nullable|required_without:kode_aset|string|max:255',
             'deskripsi' => 'required|string',
+            'photos' => ['required', 'array', 'min:1'],
+            'photos.*' => ['image', 'mimes:jpg,jpeg,png,webp'],
         ]);
 
         try {

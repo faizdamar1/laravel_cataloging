@@ -1,11 +1,12 @@
 import AppLayout from "@/layouts/app-layout";
 import { dashboard } from "@/routes";
 import { BreadcrumbItem } from "@/types";
-import { Head, useForm } from "@inertiajs/react";
-import { useState } from "react";
-import { useDropzone } from "react-dropzone";
-import imageCompression from "browser-image-compression";
+import { Head, useForm, router } from "@inertiajs/react";
+import { useEffect } from "react";
 import { PhotoIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { useImageUploader } from "@/hooks/use-image-uploader";
+import { MAX_TOTAL_SIZE } from "@/lib/image";
+import { formatSize } from "@/lib/utils";
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: "Dashboard", href: dashboard().url },
@@ -13,15 +14,30 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: "Create Item", href: "" },
 ];
 
-interface PreviewImage {
-    file: File;
-    preview: string;
-    originalSize: number;
-    compressedSize: number;
-}
 
 export default function CreateItem() {
-    const [previewImages, setPreviewImages] = useState<PreviewImage[]>([]);
+    const {
+        getRootProps,
+        getInputProps,
+        isDragActive,
+        previewImages,
+        compressedFiles,
+        totalOriginalSize,
+        totalCompressedSize,
+        removeImage,
+        clearImages,
+    } = useImageUploader({
+        maxTotalSize: MAX_TOTAL_SIZE,
+        dropzoneOptions: {
+            accept: { "image/*": [] },
+            multiple: true,
+        }
+    });
+
+    const percentage = Math.min(
+        (totalCompressedSize / MAX_TOTAL_SIZE) * 100,
+        100
+    );
 
     const { data, setData, post, errors, reset, processing } = useForm({
         item_code: "",
@@ -30,61 +46,11 @@ export default function CreateItem() {
         photos: [] as File[],
     });
 
-    const formatSize = (bytes: number) => {
-        if (bytes < 1024) return `${bytes} B`;
-        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-        return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
-    };
+    useEffect(() => {
+        setData("photos", compressedFiles);
+    }, [compressedFiles]);
 
-    const compressFiles = async (files: File[]) => {
-        return Promise.all(
-            files.map(file =>
-                imageCompression(file, {
-                    maxSizeMB: 0.09,
-                    maxWidthOrHeight: 800,
-                    initialQuality: 0.7,
-                    useWebWorker: true,
-                    fileType: 'image/jpeg',
-                })
-            )
-        );
-    };
 
-    const onDrop = async (acceptedFiles: File[]) => {
-        const MAX_FILE_SIZE = 5 * 1024 * 1024;
-
-        const invalidFiles = acceptedFiles.filter(file => file.size > MAX_FILE_SIZE);
-
-        if (invalidFiles.length > 0) {
-            alert("Maksimal ukuran setiap gambar adalah 5 MB.");
-            return;
-        }
-
-        const compressed = await compressFiles(acceptedFiles);
-
-        const newPreview = compressed.map((file, index) => ({
-            file,
-            preview: URL.createObjectURL(file),
-            originalSize: acceptedFiles[index].size,
-            compressedSize: file.size,
-        }));
-
-        setPreviewImages(prev => [...prev, ...newPreview]);
-        setData("photos", [...data.photos, ...compressed]);
-    };
-
-    const removeImage = (index: number) => {
-        URL.revokeObjectURL(previewImages[index].preview);
-
-        setPreviewImages(prev => prev.filter((_, i) => i !== index));
-        setData("photos", data.photos.filter((_, i) => i !== index));
-    };
-
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({
-        multiple: true,
-        accept: { "image/*": [] },
-        onDrop,
-    });
 
     const onSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -92,8 +58,7 @@ export default function CreateItem() {
         post("/admin/item/store", {
             forceFormData: true,
             onSuccess: () => {
-                previewImages.forEach(x => URL.revokeObjectURL(x.preview));
-                setPreviewImages([]);
+                clearImages();
                 reset();
             },
         });
@@ -110,16 +75,18 @@ export default function CreateItem() {
 
                     <div className="space-y-5 lg:col-span-2">
 
-                        <div>
-                            <label className="mb-2 block text-sm font-semibold">Item Code</label>
-                            <input type="text" value={data.item_code} onChange={e => setData("item_code", e.target.value)} className="w-full rounded-xl border border-gray-300 p-3 focus:border-forest-500 focus:ring-forest-500" />
-                            {errors.item_code && <p className="mt-1 text-sm text-red-500">{errors.item_code}</p>}
-                        </div>
+                        <div className="flex flex-row item gap-x-2 justify-between">
+                            <div className="flex-1">
+                                <label className="mb-2 block text-sm font-semibold">Item Code</label>
+                                <input type="text" value={data.item_code} onChange={e => setData("item_code", e.target.value)} className="w-full rounded-xl border border-gray-300 p-3 focus:border-forest-500 focus:ring-forest-500" />
+                                {errors.item_code && <p className="mt-1 text-sm text-red-500">{errors.item_code}</p>}
+                            </div>
 
-                        <div>
-                            <label className="mb-2 block text-sm font-semibold">PO Number</label>
-                            <input type="text" value={data.number_po} onChange={e => setData("number_po", e.target.value)} className="w-full rounded-xl border border-gray-300 p-3 focus:border-forest-500 focus:ring-forest-500" />
-                            {errors.number_po && <p className="mt-1 text-sm text-red-500">{errors.number_po}</p>}
+                            <div className="flex-1">
+                                <label className="mb-2 block text-sm font-semibold">PO Number</label>
+                                <input type="text" value={data.number_po} onChange={e => setData("number_po", e.target.value)} className="w-full rounded-xl border border-gray-300 p-3 focus:border-forest-500 focus:ring-forest-500" />
+                                {errors.number_po && <p className="mt-1 text-sm text-red-500">{errors.number_po}</p>}
+                            </div>
                         </div>
 
                         <div>
@@ -127,11 +94,9 @@ export default function CreateItem() {
                             <textarea rows={6} value={data.description} onChange={e => setData("description", e.target.value)} className="w-full rounded-xl border border-gray-300 p-3 focus:border-forest-500 focus:ring-forest-500" />
                             {errors.description && <p className="mt-1 text-sm text-red-500">{errors.description}</p>}
                         </div>
-
                     </div>
 
                     <div>
-
                         <label className="mb-2 block text-sm font-semibold">Images</label>
 
                         <div {...getRootProps()} className={`rounded-2xl border-2 border-dashed p-8 text-center transition cursor-pointer ${isDragActive ? "border-forest-600 bg-forest-50" : "border-gray-300 hover:border-forest-500"}`}>
@@ -140,6 +105,26 @@ export default function CreateItem() {
                             <p className="font-semibold">Drag & Drop Images</p>
                             <p className="mt-1 text-sm text-gray-500">atau klik untuk memilih gambar</p>
                             <p className="mt-2 text-xs text-gray-400">JPG • PNG • WEBP</p>
+                            <div className="mt-2 rounded-xl border border-forest-200 bg-forest-50 p-4">
+                                <div className="mb-2 flex justify-between text-sm">
+                                    <span>Total Setelah Compress</span>
+                                    <span className="font-semibold">
+                                        {formatSize(totalCompressedSize)} / 5MB
+                                    </span>
+                                </div>
+
+                                <div className="h-2 overflow-hidden rounded-full bg-gray-200">
+                                    <div
+                                        className="h-full rounded-full bg-forest-600 transition-all"
+                                        style={{ width: `${percentage}%` }}
+                                    />
+                                </div>
+
+                                <div className="mt-2 flex justify-between text-xs text-gray-500">
+                                    <span>Original : {formatSize(totalOriginalSize)}</span>
+                                    <span>Saved : {Math.round((1 - totalCompressedSize / totalOriginalSize) * 100 || 0)}%</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -181,7 +166,7 @@ export default function CreateItem() {
                         </div>
                     )}
 
-                    <div className="lg:col-span-3">
+                    <div className="lg:col-span-3 mt-6">
                         <button type="submit" disabled={processing} className="w-full rounded-xl bg-forest-600 py-3 font-semibold text-white transition hover:bg-forest-700 disabled:opacity-50">
                             {processing ? "Saving..." : "Save Item"}
                         </button>

@@ -232,9 +232,9 @@ const ItemListPage = ({ items }: ItemInterface) => {
                                         <PlusCircleIcon width={18} height={18} />
                                     </button>
                                 </Link>
-                                <button onClick={handleExport} title="export" className="w-9 h-9 flex items-center justify-center rounded-full bg-forest-500 hover:bg-forest-600 transition text-white shadow">
+                                {/* <button onClick={handleExport} title="export" className="w-9 h-9 flex items-center justify-center rounded-full bg-forest-500 hover:bg-forest-600 transition text-white shadow">
                                     <FileSpreadsheetIcon width={18} height={18} />
-                                </button>
+                                </button> */}
                                 <Link href="/admin/item/import" title="import">
                                     <button className="w-9 h-9 flex items-center justify-center rounded-full bg-forest-500 hover:bg-forest-600 transition text-white shadow">
                                         <ImportIcon width={18} height={18} />
