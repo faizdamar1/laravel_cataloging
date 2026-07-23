@@ -78,20 +78,20 @@ export default function CreateItem() {
                         <div className="flex flex-row item gap-x-2 justify-between">
                             <div className="flex-1">
                                 <label className="mb-2 block text-sm font-semibold">Item Code</label>
-                                <input type="text" value={data.item_code} onChange={e => setData("item_code", e.target.value)} className="w-full rounded-xl border border-gray-300 p-3 focus:border-forest-500 focus:ring-forest-500" />
+                                <input required type="text" value={data.item_code} onChange={e => setData("item_code", e.target.value)} className="w-full rounded-xl border border-gray-300 p-3 focus:border-forest-500 focus:ring-forest-500" />
                                 {errors.item_code && <p className="mt-1 text-sm text-red-500">{errors.item_code}</p>}
                             </div>
 
                             <div className="flex-1">
                                 <label className="mb-2 block text-sm font-semibold">PO Number</label>
-                                <input type="text" value={data.number_po} onChange={e => setData("number_po", e.target.value)} className="w-full rounded-xl border border-gray-300 p-3 focus:border-forest-500 focus:ring-forest-500" />
+                                <input required type="text" value={data.number_po} onChange={e => setData("number_po", e.target.value)} className="w-full rounded-xl border border-gray-300 p-3 focus:border-forest-500 focus:ring-forest-500" />
                                 {errors.number_po && <p className="mt-1 text-sm text-red-500">{errors.number_po}</p>}
                             </div>
                         </div>
 
                         <div>
                             <label className="mb-2 block text-sm font-semibold">Description</label>
-                            <textarea rows={6} value={data.description} onChange={e => setData("description", e.target.value)} className="w-full rounded-xl border border-gray-300 p-3 focus:border-forest-500 focus:ring-forest-500" />
+                            <textarea required rows={6} value={data.description} onChange={e => setData("description", e.target.value)} className="w-full rounded-xl border border-gray-300 p-3 focus:border-forest-500 focus:ring-forest-500" />
                             {errors.description && <p className="mt-1 text-sm text-red-500">{errors.description}</p>}
                         </div>
                     </div>
