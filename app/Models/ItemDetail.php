@@ -10,7 +10,7 @@ class ItemDetail extends Model
 
     protected $fillable = [
         'item_id',
-        'photo',
+        'image',
     ];
 
     /**

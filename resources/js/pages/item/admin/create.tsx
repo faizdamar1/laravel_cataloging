@@ -43,11 +43,11 @@ export default function CreateItem() {
         item_code: "",
         number_po: "",
         description: "",
-        photos: [] as File[],
+        images: [] as File[],
     });
 
     useEffect(() => {
-        setData("photos", compressedFiles);
+        setData("images", compressedFiles);
     }, [compressedFiles]);
 
 
@@ -126,6 +126,7 @@ export default function CreateItem() {
                                 </div>
                             </div>
                         </div>
+                        {errors.images && <p className="mt-1 text-sm text-red-500">{errors.images}</p>}
                     </div>
 
                     {previewImages.length > 0 && (

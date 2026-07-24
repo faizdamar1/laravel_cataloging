@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Exports\AssetExport;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreItemRequest;
 use App\Imports\AssetImport;
 use App\Models\Item;
 use App\Models\ItemDetail;
@@ -62,29 +63,51 @@ class ItemController extends Controller
         return Inertia::render('item/admin/create');
     }
 
-    public function store(Request $request)
+    public function store(StoreItemRequest $request)
     {
-        $request->validate([
-            'kode_aset' => 'nullable|string|max:255',
-            'kode_aset_temuan' => 'nullable|required_without:kode_aset|string|max:255',
-            'deskripsi' => 'required|string',
-            'photos' => ['required', 'array', 'min:1'],
-            'photos.*' => ['image', 'mimes:jpg,jpeg,png,webp'],
+        $validated = $request->validated();
+
+        // 1. Grab the files using the correct, consistent input name (e.g., 'images')
+        $images = $request->file('images') ?? [];
+
+        // 2. Calculate size safely
+        $totalSize = collect($images)->sum(fn ($file) => $file->getSize());
+
+        if ($totalSize > (5 * 1024 * 1024)) {
+            return back()
+                ->with('error', 'Total ukuran seluruh gambar maksimal 5 MB.')
+                ->withInput();
+        }
+
+        // 3. Create the parent item
+        $item = Item::create([
+            'item_code' => $validated['item_code'],
+            'number_po' => $validated['number_po'],
+            'description' => $validated['description'],
         ]);
 
-        try {
+        // 4. Process each image safely
+        foreach ($images as $image) {
+            // MUST CHECK THIS: Ensures the temp file exists and upload wasn't interrupted
+            if ($image->isValid()) {
 
-            Asset::create([
-                'kode_aset' => $request->kode_aset,
-                'kode_aset_temuan' => $request->kode_aset_temuan,
-                'deskripsi' => $request->deskripsi,
-            ]);
+                $filename = time().'_'.uniqid().'.'.$image->extension();
 
-            return redirect()->back()->with(['success' => 'Create item successfully']);
+                $image->move(
+                    public_path('uploads/items'),
+                    $filename
+                );
 
-        } catch (\Exception $e) {
-            return redirect()->back()->with(['error' => $e->getMessage()]);
+                ItemDetail::create([
+                    'item_id' => $item->id,
+                    'image' => '/uploads/items/'.$filename,
+                ]);
+            }
         }
+
+        return redirect()
+            ->route('admin.item.index')
+            ->with('success', 'Item berhasil ditambahkan.');
     }
 
     public function edit(Item $item)
@@ -138,18 +161,18 @@ class ItemController extends Controller
 
             $details = [];
 
-            if ($request->hasFile('photos')) {
-                foreach ($request->file('photos') as $file) {
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $file) {
                     $filename = time().'_'.uniqid().'_'.$file->getClientOriginalName();
 
                     $file->move(
-                        public_path('photos'),
+                        public_path('images'),
                         $filename
                     );
 
                     $details[] = [
                         'asset_id' => $asset->id,
-                        'photo' => '/photos/'.$filename,
+                        'photo' => '/images/'.$filename,
                     ];
                 }
 
@@ -166,11 +189,11 @@ class ItemController extends Controller
         }
     }
 
-    public function destroy(Item $asset)
+    public function destroy(Item $item)
     {
-        $asset->delete();
+        $item->delete();
 
-        return redirect()->back()->with(['success' => 'Deleted asset successfully']);
+        return redirect()->back()->with(['success' => 'Deleted item successfully']);
     }
 
     public function export(Request $request, AssetExport $export)

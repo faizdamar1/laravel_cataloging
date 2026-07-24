@@ -21,17 +21,17 @@ class StoreItemRequest extends FormRequest
             'number_po' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
 
-            'photos' => ['required', 'array', 'min:1'],
-            'photos.*' => ['required', 'image', 'mimes:jpg,jpeg,png,webp'],
+            'images' => ['required', 'array', 'min:1'],
+            'images.*' => ['required', 'image', 'mimes:jpg,jpeg,png,webp'],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'photos.required' => 'Minimal harus ada 1 gambar.',
-            'photos.*.image' => 'File harus berupa gambar.',
-            'photos.*.mimes' => 'Format gambar harus JPG, PNG atau WEBP.',
+            'images.required' => 'Minimal harus ada 1 gambar.',
+            'images.*.image' => 'File harus berupa gambar.',
+            'images.*.mimes' => 'Format gambar harus JPG, PNG atau WEBP.',
         ];
     }
 }
