@@ -112,8 +112,12 @@ class ItemController extends Controller
 
     public function edit(Item $item)
     {
+        $item = $item->load('details');
+
+        dd($item);
+
         return Inertia::render('item/admin/edit', [
-            'item' => $item->load('details'),
+            'item' => $item,
         ]);
     }
 

@@ -11,7 +11,7 @@ class Item extends Model
     protected $fillable = [
         'item_code',
         'number_po',
-        'deskripsi',
+        'description',
         'created_by',
         'updated_by',
     ];
