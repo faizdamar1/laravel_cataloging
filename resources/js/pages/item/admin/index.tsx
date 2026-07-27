@@ -4,7 +4,7 @@ import AppLayout from "@/layouts/app-layout";
 import TableSearch from "@/components/table-search";
 import ModalDelete from "@/components/modal-delete";
 import Table from "@/components/Table";
-import { BreadcrumbItem, Item } from "@/types"; // Pastikan interface Asset sudah ada di types
+import { BreadcrumbItem, Item } from "@/types";
 import {
     EyeIcon,
     PencilIcon,

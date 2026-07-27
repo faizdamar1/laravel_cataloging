@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Exports\AssetExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreItemRequest;
-use App\Imports\AssetImport;
+use App\Imports\ItemImport;
 use App\Models\Item;
 use App\Models\ItemDetail;
 use Illuminate\Http\Request;
@@ -114,8 +113,6 @@ class ItemController extends Controller
     {
         $item = $item->load('details');
 
-        dd($item);
-
         return Inertia::render('item/admin/edit', [
             'item' => $item,
         ]);
@@ -200,7 +197,7 @@ class ItemController extends Controller
         return redirect()->back()->with(['success' => 'Deleted item successfully']);
     }
 
-    public function export(Request $request, AssetExport $export)
+    public function export(Request $request, ItemExport $export)
     {
         // Mengirimkan semua input filter (type, search, sort) ke class Export
         $spreadsheet = $export->export($request->all());
@@ -221,7 +218,7 @@ class ItemController extends Controller
         return Inertia::render('item/admin/import');
     }
 
-    public function processImport(Request $request, AssetImport $import)
+    public function processImport(Request $request, ItemImport $import)
     {
         $request->validate([
             'file' => 'required|mimes:xlsx,xls',
@@ -234,13 +231,13 @@ class ItemController extends Controller
         return back()->with('success', 'Import aset berhasil');
     }
 
-    public function downloadTemplate(AssetImport $import): BinaryFileResponse
+    public function downloadTemplate(ItemImport $import): BinaryFileResponse
     {
         $path = $import->template();
 
         return response()->download(
             $path,
-            'assets_import_template.xlsx'
+            'items_import_template.xlsx'
         );
     }
 }

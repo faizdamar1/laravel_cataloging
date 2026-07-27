@@ -9,12 +9,12 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: dashboard().url,
     },
     {
-        title: 'Import Asset',
+        title: 'Import Item',
         href: '',
     },
 ];
 
-const ImportAsset = () => {
+const ImportItem = () => {
     const { setData, post, errors, reset, processing } = useForm({
         file: null as File | null,
     });
@@ -22,7 +22,7 @@ const ImportAsset = () => {
     const onSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        post('/admin/asset/process_import', {
+        post('/admin/item/process_import', {
             forceFormData: true,
             onSuccess: () => reset(),
         });
@@ -30,15 +30,14 @@ const ImportAsset = () => {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Import Asset" />
+            <Head title="Import Item" />
 
             <div className="p-4">
                 <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">
-                    Import Asset
+                    Import Item
                 </h1>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
+                <div className="">
                     {/* LEFT */}
                     <div className="lg:col-span-2">
                         <div
@@ -104,7 +103,7 @@ const ImportAsset = () => {
                                 {/* BUTTON */}
                                 <div className="flex gap-3">
                                     <a
-                                        href="/admin/asset/import/template"
+                                        href="/admin/item/import/template"
                                         className="
                                             px-5 py-3 rounded-xl
                                             bg-blue-600 hover:bg-blue-700
@@ -129,118 +128,16 @@ const ImportAsset = () => {
                                     >
                                         {processing
                                             ? 'Importing...'
-                                            : 'Import Asset'}
+                                            : 'Import Item'}
                                     </button>
                                 </div>
                             </form>
                         </div>
                     </div>
-
-                    {/* RIGHT INFO */}
-                    <div>
-                        <div
-                            className="
-                                bg-white dark:bg-gray-900
-                                rounded-2xl shadow-sm
-                                border border-gray-200 dark:border-gray-700
-                                p-6
-                                space-y-5
-                            "
-                        >
-                            <h2 className="text-lg font-semibold dark:text-white">
-                                Petunjuk Import
-                            </h2>
-
-                            <div className="space-y-4 text-sm text-gray-600 dark:text-gray-300">
-
-                                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-xl p-4">
-                                    <p className="font-semibold text-yellow-700 dark:text-yellow-400 mb-2">
-                                        Penting
-                                    </p>
-
-                                    <ul className="list-disc ml-5 space-y-1">
-                                        <li>
-                                            Jangan mengubah nama header kolom
-                                        </li>
-                                        <li>
-                                            Gunakan template Excel resmi
-                                        </li>
-                                        <li>
-                                            File harus format .xlsx atau .xls
-                                        </li>
-                                    </ul>
-                                </div>
-
-                                <div>
-                                    <p className="font-semibold mb-2 dark:text-white">
-                                        Kolom Wajib
-                                    </p>
-
-                                    <ul className="list-disc ml-5 space-y-1">
-                                        <li>entitas</li>
-                                        <li>kota_lokasi</li>
-                                    </ul>
-                                </div>
-
-                                <div>
-                                    <p className="font-semibold mb-2 dark:text-white">
-                                        Aturan Kode Asset
-                                    </p>
-
-                                    <div className="space-y-3">
-
-                                        <div className="border rounded-lg p-3 dark:border-gray-700">
-                                            <p className="font-medium text-green-600">
-                                                Asset Normal
-                                            </p>
-                                            <p>
-                                                Isi <b>kode_aset</b>
-                                            </p>
-                                            <p>
-                                                Kosongkan{' '}
-                                                <b>kode_aset_temuan</b>
-                                            </p>
-                                        </div>
-
-                                        <div className="border rounded-lg p-3 dark:border-gray-700">
-                                            <p className="font-medium text-orange-600">
-                                                Asset Temuan
-                                            </p>
-                                            <p>
-                                                Isi <b>kode_aset_temuan</b>
-                                            </p>
-                                            <p>
-                                                Kosongkan <b>kode_aset</b>
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <p className="font-semibold mb-2 dark:text-white">
-                                        Validasi Tambahan
-                                    </p>
-
-                                    <ul className="list-disc ml-5 space-y-1">
-                                        <li>
-                                            qty harus berupa angka
-                                        </li>
-                                        <li>
-                                            deskripsi wajib untuk asset normal
-                                        </li>
-                                        <li>
-                                            pic_dept wajib untuk asset normal
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
             </div>
         </AppLayout>
     );
 };
 
-export default ImportAsset;
+export default ImportItem;

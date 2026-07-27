@@ -2,11 +2,10 @@
 
 namespace App\Exports;
 
-use App\Models\Asset;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 
-class AssetExport
+class ItemExport
 {
     public function export(array $filters = [])
     {
@@ -38,13 +37,7 @@ class AssetExport
             $sheet->getStyle($cell)->getFont()->setBold(true);
         }
 
-        $query = Asset::with('details', 'updatedby');
-
-        if (($filters['type'] ?? null) === 'Temuan') {
-            $query->whereNotNull('kode_aset_temuan');
-        } elseif (($filters['type'] ?? null) === 'Asset') {
-            $query->whereNotNull('kode_aset');
-        }
+        $query = Item::with('details');
 
         if (! empty($filters['search'])) {
             $search = $filters['search'];
@@ -63,7 +56,7 @@ class AssetExport
 
         $sortDirection = $filters['sort'] ?? 'DESC';
 
-        $assets = $query
+        $item = $query
             ->orderBy('created_at', $sortDirection)
             ->get();
 
@@ -71,25 +64,25 @@ class AssetExport
 
         $row = 2;
 
-        foreach ($assets as $asset) {
+        foreach ($item as $item) {
 
-            $sheet->setCellValue('A'.$row, $asset->entity);
-            $sheet->setCellValue('B'.$row, $asset->kode_aset);
-            $sheet->setCellValue('C'.$row, $asset->kode_aset_temuan);
-            $sheet->setCellValue('D'.$row, $asset->deskripsi);
-            $sheet->setCellValue('E'.$row, $asset->status);
-            $sheet->setCellValue('F'.$row, $asset->qty);
-            $sheet->setCellValue('G'.$row, $asset->qty_actual);
-            $sheet->setCellValue('H'.$row, $asset->kondisi);
-            $sheet->setCellValue('I'.$row, $asset->remarks);
-            $sheet->setCellValue('J'.$row, $asset->pic_dept);
-            $sheet->setCellValue('K'.$row, $asset->lokasi);
-            $sheet->setCellValue('L'.$row, $asset->updatedby->email ?? '-');
+            $sheet->setCellValue('A'.$row, $item->entity);
+            $sheet->setCellValue('B'.$row, $item->kode_aset);
+            $sheet->setCellValue('C'.$row, $item->kode_aset_temuan);
+            $sheet->setCellValue('D'.$row, $item->deskripsi);
+            $sheet->setCellValue('E'.$row, $item->status);
+            $sheet->setCellValue('F'.$row, $item->qty);
+            $sheet->setCellValue('G'.$row, $item->qty_actual);
+            $sheet->setCellValue('H'.$row, $item->kondisi);
+            $sheet->setCellValue('I'.$row, $item->remarks);
+            $sheet->setCellValue('J'.$row, $item->pic_dept);
+            $sheet->setCellValue('K'.$row, $item->lokasi);
+            $sheet->setCellValue('L'.$row, $item->updatedby->email ?? '-');
 
             // Tinggi row untuk foto
             $sheet->getRowDimension($row)->setRowHeight(90);
 
-            foreach ($asset->details->take(5) as $index => $detail) {
+            foreach ($item->details->take(5) as $index => $detail) {
 
                 if (! isset($imageColumns[$index])) {
                     continue;
