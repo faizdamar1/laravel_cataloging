@@ -39,6 +39,7 @@ const defaultHeicConversionOptions = {
     quality: 0.9,
 };
 
+
 export function useImageUploader(options: ImageUploaderOptions = {}) {
     const {
         maxTotalSize = 5 * 1024 * 1024,

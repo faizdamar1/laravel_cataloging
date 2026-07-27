@@ -4,12 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreItemRequest;
+use App\Http\Requests\UpdateItemRequest;
 use App\Imports\ItemImport;
 use App\Models\Item;
 use App\Models\ItemDetail;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\File;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -118,76 +118,63 @@ class ItemController extends Controller
         ]);
     }
 
-    public function update(Request $request, Item $item)
+    public function update(UpdateItemRequest $request, Item $item)
     {
-        $request->validate([
-            'kode_aset' => [
-                'nullable',
-                'required_without:kode_aset_temuan',
-                'string',
-                'max:255',
-                Rule::unique('assets', 'kode_aset')->ignore($asset->id),
-            ],
-            'kode_aset_temuan' => [
-                'nullable',
-                'required_without:kode_aset',
-                'string',
-                'max:255',
-                Rule::unique('assets', 'kode_aset_temuan')->ignore($asset->id),
-            ],
-            'deskripsi' => 'required|string',
-            'images' => 'nullable|array|max:5',
-            'images.*' => 'image|mimes:jpg,jpeg,png,heic,heif|max:10000',
+        $validated = $request->validated();
+
+        $item->update([
+            'item_code' => $validated['item_code'],
+            'number_po' => $validated['number_po'],
+            'description' => $validated['description'],
         ]);
 
-        try {
+        $deletedImages = $request->input('deleted_images', []);
 
-            $data = [
-                'kode_aset' => $request->kode_aset,
-                'kode_aset_temuan' => $request->kode_aset_temuan,
-                'deskripsi' => $request->deskripsi,
-                'pic_dept' => $request->pic_dept,
-                'lokasi' => $request->lokasi,
-                'status' => $request->status,
-                'kondisi' => $request->kondisi,
-                'remarks' => $request->remarks,
-                'qty' => $request->qty ?? 0,
-                'qty_actual' => $request->qty_actual ?? 0,
-                'entity' => $request->entity,
-                'tgl_scan' => now(),
-                'updated_by' => Auth::id(),
-            ];
+        if (! empty($deletedImages)) {
+            $details = ItemDetail::whereIn('id', $deletedImages)
+                ->where('item_id', $item->id)
+                ->get();
 
-            $asset->update($data);
+            foreach ($details as $detail) {
+                $filePath = public_path($detail->image);
 
-            $details = [];
-
-            if ($request->hasFile('images')) {
-                foreach ($request->file('images') as $file) {
-                    $filename = time().'_'.uniqid().'_'.$file->getClientOriginalName();
-
-                    $file->move(
-                        public_path('images'),
-                        $filename
-                    );
-
-                    $details[] = [
-                        'asset_id' => $asset->id,
-                        'photo' => '/images/'.$filename,
-                    ];
+                if (File::exists($filePath)) {
+                    File::delete($filePath);
                 }
 
-                ItemDetail::insert($details);
+                $detail->delete();
             }
-
-            return redirect()->back()
-                ->with('success', 'Update asset successfully');
-
-        } catch (\Exception $e) {
-
-            return redirect()->back()
-                ->with('error', $e->getMessage());
         }
+
+        $images = $request->file('images') ?? [];
+
+        $totalSize = collect($images)->sum(fn ($file) => $file->getSize());
+
+        if ($totalSize > (5 * 1024 * 1024)) {
+            return back()
+                ->with('error', 'Total ukuran seluruh gambar maksimal 5 MB.')
+                ->withInput();
+        }
+
+        foreach ($images as $image) {
+            if ($image->isValid()) {
+                $filename = time().'_'.uniqid().'.'.$image->extension();
+
+                $image->move(
+                    public_path('uploads/items'),
+                    $filename
+                );
+
+                ItemDetail::create([
+                    'item_id' => $item->id,
+                    'image' => '/uploads/items/'.$filename,
+                ]);
+            }
+        }
+
+        return redirect()
+            ->route('admin.item.index')
+            ->with('success', 'Item berhasil diperbarui.');
     }
 
     public function destroy(Item $item)

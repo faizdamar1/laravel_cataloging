@@ -1,310 +1,299 @@
+import { useImageUploader } from '@/hooks/use-image-uploader';
 import AppLayout from '@/layouts/app-layout';
+import { MAX_TOTAL_SIZE } from '@/lib/image';
+import { formatSize } from '@/lib/utils';
 import { dashboard } from '@/routes';
-import { Asset, BreadcrumbItem } from '@/types';
+import { Item, BreadcrumbItem } from '@/types';
+import { PhotoIcon } from '@heroicons/react/24/outline';
 import { Head, useForm } from '@inertiajs/react';
-import { useState } from 'react';
+import { TrashIcon } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface Props {
-    asset: Asset;
+    item: Item;
 }
 
-const EditAsset = ({ asset }: Props) => {
-    // Inisialisasi: jika kode_aset_temuan ada holds value, maka set sebagai temuan
-    const [isTemuan, setIsTemuan] = useState<boolean>(!!asset.kode_aset_temuan);
+const EditItem = ({ item }: Props) => {
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: dashboard().url },
-        { title: 'Assets', href: '/admin/asset' },
-        { title: 'Edit Asset', href: '' },
+        { title: 'Items', href: '/admin/item' },
+        { title: 'Edit Item', href: '' },
     ];
 
     const { data, setData, post, errors, processing } = useForm({
         _method: 'PUT',
-        kode_aset: asset.kode_aset ?? '',
-        kode_aset_temuan: asset.kode_aset_temuan ?? '',
-        deskripsi: asset.deskripsi ?? '',
-        pic_dept: asset.pic_dept ?? '',
-        lokasi: asset.lokasi ?? '',
-        status: asset.status ?? 'Found',
-        kondisi: asset.kondisi ?? '',
-        remarks: asset.remarks ?? '',
-        qty: asset.qty ?? 0,
-        qty_actual: asset.qty_actual ?? '',
-        entity: asset.entity ?? '',
-        photos: [] as File[],
+        number_po: item.number_po ?? '',
+        item_code: item.item_code ?? '',
+        description: item.description ?? '',
+        images: [] as File[],
+        deleted_images: [] as number[],
     });
 
-    const handleTipeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const val = e.target.value === 'temuan';
-        setIsTemuan(val);
-
-        if (val) {
-            setData('kode_aset', '');
-        } else {
-            setData('kode_aset_temuan', '');
+    const {
+        getRootProps,
+        getInputProps,
+        isDragActive,
+        previewImages,
+        compressedFiles,
+        totalOriginalSize,
+        totalCompressedSize,
+        removeImage,
+        clearImages,
+    } = useImageUploader({
+        maxTotalSize: MAX_TOTAL_SIZE,
+        dropzoneOptions: {
+            accept: { "image/*": [] },
+            multiple: true,
         }
+    });
+
+    const percentage = Math.min(
+        (totalCompressedSize / MAX_TOTAL_SIZE) * 100,
+        100
+    );
+
+
+    const [existingImages, setExistingImages] = useState(
+        item.details ?? []
+    );
+
+    const [deletedImages, setDeletedImages] = useState<number[]>([]);
+
+
+    const removeExistingImage = (id: number) => {
+
+        setExistingImages(prev =>
+            prev.filter(image => image.id !== id)
+        );
+
+        setDeletedImages(prev => [
+            ...prev,
+            id
+        ]);
     };
 
     const onSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(`/admin/asset/${asset.id}/update`, {
+        post(`/admin/item/${item.id}/update`, {
             forceFormData: true,
         });
     };
 
+    useEffect(() => {
+        setData("deleted_images", deletedImages);
+    }, [deletedImages]);
+
+
+    useEffect(() => {
+        setData("images", compressedFiles);
+    }, [compressedFiles]);
+
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Edit Asset" />
+            <Head title="Edit Item" />
 
-            <h1 className="hidden md:block text-xl font-semibold px-4 mt-4 dark:text-gray-100">
-                Edit Asset: {asset.kode_aset || asset.kode_aset_temuan}
-            </h1>
+            <div className="m-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+                <h1 className="mb-6 text-2xl font-bold">Edit Item</h1>
 
-            <div className="bg-white dark:bg-gray-900 flex-1 p-6 m-4 mt-2 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
                 <form onSubmit={onSubmit} className="space-y-6">
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* 1. DROPDOWN LOGIC */}
-                        <div className="md:col-span-2 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg border border-dashed border-gray-300 dark:border-gray-600">
-                            <label className="block text-sm font-bold mb-2 text-forest-600 dark:text-forest-400">
-                                Jenis Input Aset
-                            </label>
-                            <select
-                                value={isTemuan ? 'temuan' : 'regular'}
-                                onChange={handleTipeChange}
-                                className="mt-1 block w-full p-2.5 rounded-md border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-forest-500"
-                            >
-                                <option value="regular">Aset Terdaftar (Kode Aset Normal)</option>
-                                <option value="temuan">Aset Temuan (Kode Aset Temuan)</option>
-                            </select>
-                        </div>
-
-                        {/* ENTITY */}
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Entity</label>
-                            <input
-                                type="text"
-                                value={data.entity}
-                                onChange={(e) => setData('entity', e.target.value)}
-                                className="mt-1 block w-full p-2 rounded-md border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100"
-                            />
-                        </div>
-
-                        {/* KODE ASSET / TEMUAN */}
-                        {!isTemuan ? (
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Kode Asset</label>
-                                <input
-                                    type="text"
-                                    value={data.kode_aset}
-                                    onChange={(e) => setData('kode_aset', e.target.value)}
-                                    className={`mt-1 block w-full p-2 rounded-md border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 ${errors.kode_aset ? 'border-red-500' : ''}`}
-                                    required
-                                />
-                                {errors.kode_aset && <p className="text-red-500 text-sm mt-1">{errors.kode_aset}</p>}
-                            </div>
-                        ) : (
-                            <div>
-                                <label className="block text-sm font-medium mb-1 text-orange-600">Kode Asset Temuan</label>
-                                <input
-                                    type="text"
-                                    value={data.kode_aset_temuan}
-                                    onChange={(e) => setData('kode_aset_temuan', e.target.value)}
-                                    className={`mt-1 block w-full p-2 rounded-md border bg-orange-50 dark:bg-gray-800 border-orange-300 dark:border-orange-600 text-gray-900 dark:text-gray-100 ${errors.kode_aset_temuan ? 'border-red-500' : ''}`}
-                                    required
-                                />
-                                {errors.kode_aset_temuan && <p className="text-red-500 text-sm mt-1">{errors.kode_aset_temuan}</p>}
-                            </div>
-                        )}
-                    </div>
-
-                    <hr className="border-gray-100 dark:border-gray-700" />
-
-                    {/* DESKRIPSI */}
                     <div>
-                        <label className="block text-sm font-medium mb-1">Deskripsi</label>
-                        <textarea
-                            value={data.deskripsi}
-                            onChange={(e) => setData('deskripsi', e.target.value)}
-                            rows={3}
-                            className={`mt-1 block w-full p-2 rounded-md border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 ${errors.deskripsi ? 'border-red-500' : ''}`}
-                            required
-                        />
-                    </div>
-
-                    {/* STATUS & QTY */}
-                    <div className="">
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Status</label>
-                            <select
-                                value={data.status}
-                                onChange={(e) => setData('status', e.target.value as 'Found' | 'Not Found')}
-                                className="mt-1 block w-full p-2 rounded-md border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100"
-                            >
-                                <option value="Found">Found</option>
-                                <option value="Not Found">Not Found</option>
-                            </select>
-                        </div>
-
-                    </div>
-                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Quantity</label>
-                            <input
-                                type="number"
-                                value={data.qty}
-                                onChange={(e) => setData('qty', parseInt(e.target.value))}
-                                className="mt-1 block w-full p-2 rounded-md border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Quantity Actual</label>
-                            <input
-                                type="number"
-                                value={data.qty_actual}
-                                placeholder="- "
-                                min="0"
-                                onChange={(e) => {
-                                    const val = e.target.value;
-                                    // Jika dihapus sampai kosong, simpan sebagai string kosong, jika ada angka konversi ke integer
-                                    setData('qty_actual', val === '' ? '' : parseInt(val, 10));
-                                }}
-                                className="mt-1 block w-full p-2 rounded-md border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-forest-500"
-                            />
-                        </div>
-                    </div>
-
-                    {/* CONDITION */}
-                    <div>
-                        <label className="block text-sm font-medium mb-1">Condition</label>
-                        <select
-                            value={data.kondisi}
-                            onChange={(e) => setData('kondisi', e.target.value)}
-                            className="mt-1 block w-full p-2 rounded-md border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100"
-                        >
-                            <option value="Good">Good</option>
-                            <option value="Not Good">Not Good</option>
-                        </select>
-                    </div>
-
-                    {/* REMARKS */}
-                    <div>
-                        <label className="block text-sm font-medium mb-1">Remarks</label>
-                        <textarea
-                            value={data.remarks}
-                            onChange={(e) => setData('remarks', e.target.value)}
-                            rows={3}
-                            className="mt-1 block w-full p-2 rounded-md border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100"
-                        />
-                    </div>
-
-                    {/* DEPT & LOKASI */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Department (PIC)</label>
-                            <input
-                                type="text"
-                                value={data.pic_dept}
-                                onChange={(e) => setData('pic_dept', e.target.value)}
-                                className="mt-1 block w-full p-2 rounded-md border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Lokasi</label>
-                            <input
-                                type="text"
-                                value={data.lokasi}
-                                onChange={(e) => setData('lokasi', e.target.value)}
-                                className="mt-1 block w-full p-2 rounded-md border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100"
-                            />
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium mb-1">
-                            Photo Asset
-                        </label>
+                        <label className="mb-2 block text-sm font-semibold">Item Code</label>
 
                         <input
-                            type="file"
-                            multiple
-                            accept="image/*"
-                            onChange={(e) => {
-                                const files = Array.from(e.target.files || []);
-
-                                if (files.length > 5) {
-                                    alert('Maksimal 5 foto');
-                                    return;
-                                }
-
-                                setData('photos', files);
-                            }}
+                            type="text"
+                            value={data.item_code}
+                            onChange={e => setData("item_code", e.target.value)}
+                            className="w-full rounded-xl border border-gray-300 p-3 focus:border-forest-500 focus:ring-forest-500"
                         />
 
-                        {data.photos.length > 0 && (
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
-                                {data.photos.map((file, index) => (
-                                    <img
-                                        key={index}
-                                        src={URL.createObjectURL(file)}
-                                        alt=""
-                                        className="h-32 w-full rounded-lg border object-cover"
-                                    />
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium mb-2">
-                            Existing Photos
-                        </label>
-
-                        {asset.details && asset.details.length > 0 ? (
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                {asset.details.map((detail) => (
-                                    <a
-                                        key={detail.id}
-                                        href={detail.photo}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                    >
-                                        <img
-                                            src={detail.photo}
-                                            alt="Asset"
-                                            className="h-32 w-full rounded-lg border object-cover hover:opacity-80"
-                                        />
-                                    </a>
-                                ))}
-                            </div>
-                        ) : (
-                            <p className="text-sm text-gray-500">
-                                No photos uploaded yet.
+                        {errors.item_code && (
+                            <p className="mt-1 text-sm text-red-500">
+                                {errors.item_code}
                             </p>
                         )}
                     </div>
 
-                    {/* SUBMIT */}
-                    <div className="flex gap-4">
-                        <button
-                            type="button"
-                            onClick={() => window.history.back()}
-                            className="w-1/3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 font-semibold py-3 rounded-md hover:bg-gray-300 transition"
+                    <div>
+                        <label className="mb-2 block text-sm font-semibold">PO Number</label>
+
+                        <input
+                            type="text"
+                            value={data.number_po}
+                            onChange={e => setData("number_po", e.target.value)}
+                            className="w-full rounded-xl border border-gray-300 p-3 focus:border-forest-500 focus:ring-forest-500"
+                        />
+
+                        {errors.number_po && (
+                            <p className="mt-1 text-sm text-red-500">
+                                {errors.number_po}
+                            </p>
+                        )}
+                    </div>
+
+                    <div>
+                        <label className="mb-2 block text-sm font-semibold">Description</label>
+
+                        <textarea
+                            rows={6}
+                            value={data.description}
+                            onChange={e => setData("description", e.target.value)}
+                            className="w-full rounded-xl border border-gray-300 p-3 focus:border-forest-500 focus:ring-forest-500"
+                        />
+
+                        {errors.description && (
+                            <p className="mt-1 text-sm text-red-500">
+                                {errors.description}
+                            </p>
+                        )}
+                    </div>
+
+                    <div>
+                        <label className="mb-2 block text-sm font-semibold">Images</label>
+
+                        <div {...getRootProps()} className={`rounded-2xl border-2 border-dashed p-8 text-center transition cursor-pointer ${isDragActive ? "border-forest-600 bg-forest-50" : "border-gray-300 hover:border-forest-500"}`}>
+                            <input {...getInputProps()} />
+                            <PhotoIcon className="mx-auto mb-3 h-12 w-12 text-gray-400" />
+                            <p className="font-semibold">Drag & Drop Images</p>
+                            <p className="mt-1 text-sm text-gray-500">atau klik untuk memilih gambar</p>
+                            <p className="mt-2 text-xs text-gray-400">JPG • PNG • WEBP</p>
+                            <div className="mt-2 rounded-xl border border-forest-200 bg-forest-50 p-4">
+                                <div className="mb-2 flex justify-between text-sm">
+                                    <span>Total Setelah Compress</span>
+                                    <span className="font-semibold">
+                                        {formatSize(totalCompressedSize)} / 5MB
+                                    </span>
+                                </div>
+
+                                <div className="h-2 overflow-hidden rounded-full bg-gray-200">
+                                    <div
+                                        className="h-full rounded-full bg-forest-600 transition-all"
+                                        style={{ width: `${percentage}%` }}
+                                    />
+                                </div>
+
+                                <div className="mt-2 flex justify-between text-xs text-gray-500">
+                                    <span>Original : {formatSize(totalOriginalSize)}</span>
+                                    <span>Saved : {Math.round((1 - totalCompressedSize / totalOriginalSize) * 100 || 0)}%</span>
+                                </div>
+                            </div>
+                        </div>
+                        {errors.images && <p className="mt-1 text-sm text-red-500">{errors.images}</p>}
+                    </div>
+
+                    {previewImages.length > 0 && (
+                        <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
+
+                            {previewImages.map((image, index) => {
+                                const saved = Math.round((1 - image.compressedSize / image.originalSize) * 100);
+
+                                return (
+                                    <div key={index} className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                                        <img src={image.preview} className="aspect-square w-full object-cover" />
+
+                                        <div className="space-y-1 p-3 text-sm">
+                                            <div className="truncate font-semibold">{image.file.name}</div>
+
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-500">Original</span>
+                                                <span>{formatSize(image.originalSize)}</span>
+                                            </div>
+
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-500">Compressed</span>
+                                                <span className="font-medium text-green-600">{formatSize(image.compressedSize)}</span>
+                                            </div>
+
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-500">Saved</span>
+                                                <span className="font-bold text-forest-600">{saved}%</span>
+                                            </div>
+
+                                            <button type="button" onClick={() => removeImage(index)} className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-red-50 py-2 text-red-600 transition hover:bg-red-100">
+                                                <TrashIcon className="h-4 w-4" />
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {existingImages.length > 0 && (
+                        <div className="mt-6">
+                            <label className="mb-2 block text-sm font-semibold">
+                                Existing Images
+                            </label>
+
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
+
+                                {existingImages.map((image) => (
+                                    <div
+                                        key={image.id}
+                                        className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
+                                    >
+                                        <img
+                                            src={image.image}
+                                            className="aspect-square w-full object-cover"
+                                        />
+
+                                        <div className="space-y-2 p-3 text-sm">
+
+                                            <div className="truncate font-semibold">
+                                                {image.image.split("/").pop()}
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    removeExistingImage(image.id)
+                                                }
+                                                className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-50 py-2 text-red-600 transition hover:bg-red-100"
+                                            >
+                                                <TrashIcon className="h-4 w-4" />
+                                                Remove
+                                            </button>
+
+                                        </div>
+                                    </div>
+                                ))}
+
+                            </div>
+                        </div>
+                    )}
+
+                    {errors.images && (
+                        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-600">
+                            {errors.images}
+                        </div>
+                    )}
+
+                    <div className="flex items-center justify-end gap-3">
+
+                        <a
+                            href="/admin/item"
+                            className="rounded-xl border border-gray-300 px-5 py-3 font-medium transition hover:bg-gray-100"
                         >
                             Cancel
-                        </button>
+                        </a>
+
                         <button
                             type="submit"
                             disabled={processing}
-                            className="w-2/3 bg-forest-600 text-white font-semibold py-3 rounded-md hover:bg-forest-700 transition disabled:opacity-50"
+                            className="rounded-xl bg-forest-600 px-6 py-3 font-semibold text-white transition hover:bg-forest-700 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                            {processing ? 'Updating...' : 'Update Asset'}
+                            {processing ? "Updating..." : "Update Item"}
                         </button>
+
                     </div>
+
                 </form>
             </div>
         </AppLayout>
     );
 };
 
-export default EditAsset;
+export default EditItem;
