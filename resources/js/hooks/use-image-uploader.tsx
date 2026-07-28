@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useDropzone, DropzoneOptions } from "react-dropzone";
 import imageCompression from "browser-image-compression";
 import heic2any from "heic2any";
@@ -48,11 +48,18 @@ export function useImageUploader(options: ImageUploaderOptions = {}) {
         dropzoneOptions = {},
     } = options;
 
+
+
     const [previewImages, setPreviewImages] = useState<PreviewImage[]>([]);
     const [compressedFiles, setCompressedFiles] = useState<File[]>([]);
 
     const totalOriginalSize = previewImages.reduce((sum, img) => sum + img.originalSize, 0);
     const totalCompressedSize = previewImages.reduce((sum, img) => sum + img.compressedSize, 0);
+
+    const previewImagesRef = useRef<PreviewImage[]>([]);
+    useEffect(() => {
+        previewImagesRef.current = previewImages;
+    }, [previewImages]);
 
     const onDrop = useCallback(async (acceptedFiles: File[]) => {
         try {
@@ -112,13 +119,13 @@ export function useImageUploader(options: ImageUploaderOptions = {}) {
         previewImages.forEach(image => URL.revokeObjectURL(image.preview));
         setPreviewImages([]);
         setCompressedFiles([]);
-    }, [previewImages]);
+    }, []);
 
     useEffect(() => {
         return () => {
             previewImages.forEach(image => URL.revokeObjectURL(image.preview));
         };
-    }, [previewImages]);
+    }, []);
 
     const dropzone = useDropzone({ ...dropzoneOptions, onDrop });
 
@@ -130,5 +137,6 @@ export function useImageUploader(options: ImageUploaderOptions = {}) {
         totalCompressedSize,
         removeImage,
         clearImages,
+        addFiles: onDrop,
     };
 }
