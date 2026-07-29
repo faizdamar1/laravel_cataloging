@@ -3,6 +3,21 @@ import { InertiaLinkProps } from '@inertiajs/react';
 import { LucideIcon } from 'lucide-react';
 import type { User } from './user';
 
+
+interface MasterName {
+    id: number;
+    name: string;
+    created_at?: string;
+    updated_at?: string;
+}
+
+interface MasterArea {
+    id: number;
+    name: string;
+    created_at?: string;
+    updated_at?: string;
+}
+
 interface PreviewImage {
     file: File;
     preview: string;
