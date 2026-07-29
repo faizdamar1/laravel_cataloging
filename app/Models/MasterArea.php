@@ -25,9 +25,4 @@ class MasterArea extends Model
             'master_area_names'
         );
     }
-
-    public function users()
-    {
-        return $this->hasMany(User::class);
-    }
 }

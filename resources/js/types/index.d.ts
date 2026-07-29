@@ -14,6 +14,13 @@ interface MasterName {
 interface MasterArea {
     id: number;
     name: string;
+    names: MasterName[];
+    created_at?: string;
+    updated_at?: string;
+}
+
+interface MasterCategory {
+    id: number;
     created_at?: string;
     updated_at?: string;
 }
