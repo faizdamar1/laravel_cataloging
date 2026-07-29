@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
@@ -25,6 +26,8 @@ class User extends Authenticatable
         'role',
         'photos',
         'email_verified_at',
+        'master_area_id',
+        'activity',
     ];
 
     /**
@@ -54,8 +57,11 @@ class User extends Authenticatable
         ];
     }
 
-    public function assets(): HasMany
+    public function area(): BelongsTo
     {
-        return $this->hasMany(Asset::class);
+        return $this->belongsTo(
+            MasterArea::class,
+            'master_area_id'
+        );
     }
 }
