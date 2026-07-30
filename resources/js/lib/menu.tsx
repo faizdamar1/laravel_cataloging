@@ -21,7 +21,7 @@ export const menuItems: { title: string; visible: number[]; items: MenuItem[] }[
                 label: "Item",
                 href: "/admin/item",
                 method: "get",
-                visible: [1],
+                visible: [0, 1],
             },
         ]
     },

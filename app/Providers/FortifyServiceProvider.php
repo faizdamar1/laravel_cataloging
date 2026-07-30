@@ -55,12 +55,10 @@ class FortifyServiceProvider extends ServiceProvider
                 return null;
             }
 
-            // ADMIN
             if ($user->role === 1) {
                 return $user;
             }
 
-            // USER
             if (! $request->master_name_id) {
                 return null;
             }
