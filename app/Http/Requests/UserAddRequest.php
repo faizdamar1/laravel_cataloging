@@ -4,13 +4,12 @@ namespace App\Http\Requests;
 
 use App\Actions\Fortify\PasswordValidationRules;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\Rule;
 
 class UserAddRequest extends FormRequest
 {
-
     use PasswordValidationRules;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -27,19 +26,25 @@ class UserAddRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'  => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'email' => [
-                'required','email','max:255',
+                'required', 'email', 'max:255',
                 Rule::unique('users', 'email'),
             ],
             'password' => $this->passwordRules(),
-            'photos'=> [
+            'photos' => [
                 'required',
                 'image',
                 'mimes:png,jpg,jpeg',
-                'max:9000'
+                'max:9000',
             ],
-            'role' => ['required', 'in:0,1']
+            'master_area_id' => [
+                'required',
+                'integer',
+                Rule::exists('master_areas', 'id'),
+            ],
+            'activity' => ['required', 'string', 'max:255'],
+            'role' => ['required', 'in:0,1'],
         ];
     }
 }

@@ -1,6 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
-import { BreadcrumbItem } from '@/types';
+import { BreadcrumbItem, MasterArea } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -14,20 +14,31 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const CreateUser = () => {  
+interface CreateUserProps {
+    areas: MasterArea[];
+    activities: string[];
+}
+
+const CreateUser = ({ areas, activities }: CreateUserProps) => {
 
     const { data, setData, post, errors, reset } = useForm({
         name: '',
         email: '',
-        password:'',
+        password: '',
         password_confirmation: '',
         role: 0,
+        master_area_id: "",
+        activity: "",
         photos: null as File | null,
     });
 
     const handleChangeRole = (e: React.ChangeEvent<HTMLInputElement>) => {
         setData('role', Number(e.target.value));
     };
+
+    const selectedArea = areas.find(
+        area => area.id === Number(data.master_area_id)
+    );
 
     const onSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -169,6 +180,75 @@ const CreateUser = () => {
                         )}
                     </div>
 
+                    {/* Area */}
+                    <div>
+                        <label className="block text-sm font-medium mb-1">
+                            Area
+                        </label>
+                        <select
+                            required
+                            value={data.master_area_id}
+                            onChange={(e) => setData("master_area_id", e.target.value)}
+                            className={`
+                                mt-1 block w-full p-2 rounded-md border 
+                                bg-white dark:bg-gray-800
+                                border-gray-300 dark:border-gray-600
+                                text-gray-900 dark:text-gray-100
+                                focus:ring-2 focus:ring-forest-500/40 focus:border-forest-500
+                                ${errors.master_area_id ? 'border-red-500' : ''}`}
+                        >
+                            <option value="" disabled>Select Area</option>
+
+                            {areas.map(area => (
+                                <option key={area.id} value={area.id}>
+                                    {area.name}
+                                </option>
+                            ))}
+                        </select>
+                        {errors.master_area_id && (
+                            <p className="text-red-500 text-sm mt-1">{errors.master_area_id}</p>
+                        )}
+                    </div>
+
+                    {selectedArea && (
+                        <div className="grid grid-cols-6 gap-1">
+                            {selectedArea.names?.map((name) => (
+                                <div
+                                    key={name.id}
+                                    className="rounded-sm bg-forest-50 px-2 py-1"
+                                >
+                                    {name.name}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Activity */}
+                    <div>
+                        <label className="block text-sm font-medium mb-1">
+                            Activity
+                        </label>
+                        <select
+                            value={data.activity}
+                            onChange={(e) => setData("activity", e.target.value)}
+                            className="w-full rounded-xl border border-gray-300 p-3 focus:border-forest-500 focus:ring-forest-500"
+                        >
+                            <option value="" disabled>
+                                Select Activity
+                            </option>
+
+                            {activities.map((activity) => (
+                                <option key={activity} value={activity}>
+                                    {activity}
+                                </option>
+                            ))}
+                        </select>
+                        {errors.activity && (
+                            <p className="text-red-500 text-sm mt-1">{errors.activity}</p>
+                        )}
+                    </div>
+
+
                     <div className="space-y-3">
                         <div className="flex items-center gap-3">
                             <input
@@ -178,35 +258,13 @@ const CreateUser = () => {
                                 value={1}
                                 checked={data.role === 1}
                                 onChange={handleChangeRole}
-                                className="h-4 w-4 border-gray-300 
-                text-forest-600 focus:ring-forest-500
-                dark:bg-gray-900 dark:border-gray-700"
+                                className="h-4 w-4 border-gray-300  text-forest-600 focus:ring-forest-500 dark:bg-gray-900 dark:border-gray-700"
                             />
                             <label
                                 htmlFor="role-admin"
                                 className="text-sm font-medium text-gray-700 dark:text-gray-300"
                             >
                                 Admin
-                            </label>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                            <input
-                                type="radio"
-                                id="role-assesor"
-                                name="role"
-                                value={2}
-                                checked={data.role === 2}
-                                onChange={handleChangeRole}
-                                className="h-4 w-4 border-gray-300 
-                text-forest-600 focus:ring-forest-500
-                dark:bg-gray-900 dark:border-gray-700"
-                            />
-                            <label
-                                htmlFor="role-assesor"
-                                className="text-sm font-medium text-gray-700 dark:text-gray-300"
-                            >
-                                Assesor
                             </label>
                         </div>
 
@@ -226,13 +284,10 @@ const CreateUser = () => {
                                 htmlFor="role-personal"
                                 className="text-sm font-medium text-gray-700 dark:text-gray-300"
                             >
-                                Personal
+                                User
                             </label>
                         </div>
                     </div>
-
-
-                    
 
                     {/* SUBMIT BUTTON */}
                     <button

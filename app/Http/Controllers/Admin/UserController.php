@@ -9,6 +9,7 @@ use App\Http\Requests\UserResetVerifyRequest;
 use App\Http\Requests\UserUpdateRequest;
 use App\Http\Requests\UserVerifyRequest;
 use App\Imports\UserImport;
+use App\Models\MasterArea;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -76,7 +77,17 @@ class UserController extends Controller
 
     public function create()
     {
-        return Inertia::render('user/admin/create');
+
+        $areas = MasterArea::with('names')->orderBy('name')->get();
+
+        return Inertia::render('user/admin/create', [
+            'areas' => $areas,
+            'activities' => [
+                'Receiving',
+                'Shipping',
+                'Issuing',
+            ],
+        ]);
     }
 
     public function store(UserAddRequest $request)
@@ -89,6 +100,8 @@ class UserController extends Controller
         $user->email = $validated['email'];
         $user->password = Hash::make($validated['password']);
         $user->role = $validated['role'];
+        $user->master_area_id = $validated['master_area_id'];
+        $user->activity = $validated['activity'];
         $user->email_verified_at = Carbon::now();
 
         if ($request->hasFile('photos')) {
@@ -109,8 +122,16 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
+        $areas = MasterArea::with('names')->orderBy('name')->get();
+
         return Inertia::render('user/admin/edit', [
             'user' => $user,
+            'areas' => $areas,
+            'activities' => [
+                'Receiving',
+                'Shipping',
+                'Issuing',
+            ],
         ]);
     }
 
@@ -133,6 +154,9 @@ class UserController extends Controller
 
             $user->photos = $filename;
         }
+
+        $user->master_area_id = $validated['master_area_id'];
+        $user->activity = $validated['activity'];
 
         $user->save();
 

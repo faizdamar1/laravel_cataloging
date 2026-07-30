@@ -1,6 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
-import { BreadcrumbItem, User } from '@/types';
+import { BreadcrumbItem, MasterArea, User } from '@/types';
 import { Head, router, useForm } from '@inertiajs/react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -12,9 +12,11 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 interface UserInterface {
     user: User;
+    areas: MasterArea[];
+    activities: string[];
 }
 
-const EditUser = ({ user }: UserInterface) => {
+const EditUser = ({ user, activities, areas }: UserInterface) => {
 
     const {
         data,
@@ -27,11 +29,17 @@ const EditUser = ({ user }: UserInterface) => {
         password_confirmation: "",
         photos: null as File | null,
         role: user.role || 0,
+        activity: user.activity || "",
+        master_area_id: user.master_area_id || "",
     });
 
     const handleChangedAdmin = (e: React.ChangeEvent<HTMLInputElement>) => {
         setData('role', e.target.checked ? 1 : 0);
     };
+
+    const selectedArea = areas.find(
+        area => area.id === Number(data.master_area_id)
+    );
 
 
     const onSubmit = (e: React.FormEvent) => {
@@ -48,6 +56,8 @@ const EditUser = ({ user }: UserInterface) => {
         }
 
         formData.append('role', String(data.role));
+        formData.append('master_area_id', String(data.master_area_id));
+        formData.append('activity', data.activity);
 
         formData.append('_method', 'PUT');
 
@@ -192,6 +202,74 @@ const EditUser = ({ user }: UserInterface) => {
                             </p>
                         </div>
                     )}
+
+                    {/* Area */}
+                    <div>
+                        <label className="block text-sm font-medium mb-1">
+                            Area
+                        </label>
+                        <select
+                            required
+                            value={data.master_area_id}
+                            onChange={(e) => setData("master_area_id", e.target.value)}
+                            className={`
+                                mt-1 block w-full p-2 rounded-md border 
+                                bg-white dark:bg-gray-800
+                                border-gray-300 dark:border-gray-600
+                                text-gray-900 dark:text-gray-100
+                                focus:ring-2 focus:ring-forest-500/40 focus:border-forest-500
+                                ${errors.master_area_id ? 'border-red-500' : ''}`}
+                        >
+                            <option value="" disabled>Select Area</option>
+
+                            {areas.map(area => (
+                                <option key={area.id} value={area.id}>
+                                    {area.name}
+                                </option>
+                            ))}
+                        </select>
+                        {errors.master_area_id && (
+                            <p className="text-red-500 text-sm mt-1">{errors.master_area_id}</p>
+                        )}
+                    </div>
+
+                    {selectedArea && (
+                        <div className="grid grid-cols-6 gap-1">
+                            {selectedArea.names?.map((name) => (
+                                <div
+                                    key={name.id}
+                                    className="rounded-sm bg-forest-50 px-2 py-1"
+                                >
+                                    {name.name}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Activity */}
+                    <div>
+                        <label className="block text-sm font-medium mb-1">
+                            Activity
+                        </label>
+                        <select
+                            value={data.activity}
+                            onChange={(e) => setData("activity", e.target.value)}
+                            className="w-full rounded-xl border border-gray-300 p-3 focus:border-forest-500 focus:ring-forest-500"
+                        >
+                            <option value="" disabled>
+                                Select Activity
+                            </option>
+
+                            {activities.map((activity) => (
+                                <option key={activity} value={activity}>
+                                    {activity}
+                                </option>
+                            ))}
+                        </select>
+                        {errors.activity && (
+                            <p className="text-red-500 text-sm mt-1">{errors.activity}</p>
+                        )}
+                    </div>
 
                     <div className="flex items-center gap-3">
                         <input

@@ -4,6 +4,7 @@ import { LucideIcon } from 'lucide-react';
 import type { User } from './user';
 
 
+
 interface MasterName {
     id: number;
     name: string;
@@ -94,6 +95,9 @@ export interface User {
     email: string;
     photos?: string;
     role?: number;
+    activity?: string;
+    master_area_id?: number;
+    area?: MasterArea;
     email_verified_at: string | null;
     two_factor_enabled?: boolean;
     created_at: string;

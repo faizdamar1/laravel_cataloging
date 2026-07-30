@@ -10,8 +10,8 @@ use Illuminate\Validation\Rules\Password;
 
 class UserUpdateRequest extends FormRequest
 {
-
     use PasswordValidationRules;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -33,7 +33,7 @@ class UserUpdateRequest extends FormRequest
             : $this->route('user');
 
         return [
-            'name'  => ['required','string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'email' => [
                 'required',
                 'email',
@@ -48,9 +48,15 @@ class UserUpdateRequest extends FormRequest
             'photos' => [
                 'image',
                 'mimes:png,jpg,jpeg',
-                'max:9000'
+                'max:9000',
             ],
-            'role' => ['required', 'in:0,1']
+            'role' => ['required', 'in:0,1'],
+            'master_area_id' => [
+                'required',
+                'integer',
+                Rule::exists('master_areas', 'id'),
+            ],
+            'activity' => ['required', 'string', 'max:255'],
         ];
     }
 }
