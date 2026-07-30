@@ -8,6 +8,7 @@ import type { User } from './user';
 interface MasterName {
     id: number;
     name: string;
+    areas?: MasterArea[];
     created_at?: string;
     updated_at?: string;
 }
@@ -106,6 +107,11 @@ export interface User {
     [key: string]: unknown; // This allows for additional properties...
 }
 
+interface SessionProps {
+    master_name_id?: number;
+    master_name?: string;
+}
+
 declare module '@inertiajs/core' {
     export interface PageProps<
         T extends Record<string, unknown> = Record<string, unknown>,
@@ -113,6 +119,8 @@ declare module '@inertiajs/core' {
         sessions?: {
             error?: string;
             success?: string;
+            master_name_id: string;
+            master_name: string;
         };
         auth: {
             user: User | null; // null jika belum login

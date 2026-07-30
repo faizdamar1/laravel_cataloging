@@ -4,8 +4,11 @@ namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
+use App\Models\MasterName;
+use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -31,6 +34,57 @@ class FortifyServiceProvider extends ServiceProvider
         $this->configureActions();
         $this->configureViews();
         $this->configureRateLimiting();
+
+        Fortify::loginView(function () {
+            $names = MasterName::with('areas')->get();
+
+            return Inertia::render('auth/login', [
+                'names' => $names,
+            ]);
+        });
+
+        Fortify::authenticateUsing(function (Request $request) {
+
+            $user = User::where('email', $request->email)->first();
+
+            if (! $user) {
+                return null;
+            }
+
+            if (! Hash::check($request->password, $user->password)) {
+                return null;
+            }
+
+            // ADMIN
+            if ($user->role === 1) {
+                return $user;
+            }
+
+            // USER
+            if (! $request->master_name_id) {
+                return null;
+            }
+
+            $masterName = MasterName::where('id', $request->master_name_id)
+                ->whereHas('areas', function ($query) use ($user) {
+                    $query->where(
+                        'master_areas.id',
+                        $user->master_area_id
+                    );
+                })
+                ->first();
+
+            if (! $masterName) {
+                return null;
+            }
+
+            session([
+                'master_name_id' => $masterName->id,
+                'master_name' => $masterName->name,
+            ]);
+
+            return $user;
+        });
     }
 
     /**

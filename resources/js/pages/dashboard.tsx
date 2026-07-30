@@ -35,7 +35,6 @@ interface DashboardInterface {
 }
 
 export default function Dashboard({ total_user }: DashboardInterface) {
-
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
@@ -61,7 +60,6 @@ export default function Dashboard({ total_user }: DashboardInterface) {
 
 
                     </section>
-
                 </div>
             </div>
         </AppLayout>

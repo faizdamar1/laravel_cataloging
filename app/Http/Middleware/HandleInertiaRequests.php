@@ -48,9 +48,11 @@ class HandleInertiaRequests extends Middleware
             'sessions' => [
                 'success' => session('success'),
                 'error' => session('error'),
+                'master_name_id' => session('master_name_id'),
+                'master_name' => session('master_name'),
             ],
             'flash' => [
-                'auth_error' => fn() => $request->session()->get('auth_error'),
+                'auth_error' => fn () => $request->session()->get('auth_error'),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
