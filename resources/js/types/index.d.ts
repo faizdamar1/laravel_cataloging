@@ -55,6 +55,8 @@ export interface ItemDetail {
 export interface Item {
     id: number;
     number_po: string;
+    user?: User;
+    name?: MasterName;
     details?: ItemDetail[];
     created_at?: string;
     updated_at?: string;

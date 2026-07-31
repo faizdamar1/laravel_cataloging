@@ -44,6 +44,8 @@ class ItemController extends Controller
         }
 
         $query = Item::with([
+            'user',
+            'name',
             'details.images',
         ])
             ->when($search, function ($q) use ($search) {

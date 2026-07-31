@@ -1,90 +1,79 @@
-import { formatDate } from '@/lib/utils';
-import { Item } from '@/types';
-import React from 'react';
+import { XMarkIcon } from "@heroicons/react/24/outline";
+import { Item } from "@/types";
 
-interface ModalViewDetailProps {
+interface Props {
     isOpen: boolean;
     onClose: () => void;
     item: Item | null;
 }
 
-const ModalViewDetail: React.FC<ModalViewDetailProps> = ({ isOpen, onClose, item }) => {
-    if (!isOpen || !item) return null;
+export default function ModalViewDetail({ isOpen, onClose, item }: Props) {
+
+    if (!isOpen || !item) {
+        return null;
+    }
 
     return (
-        <div className="
-            fixed inset-0 z-50 flex items-center justify-center
-            bg-black/40 backdrop-blur-sm
-        ">
-            <div className="
-                w-full max-w-xl max-h-[85vh] overflow-hidden
-                rounded-xl p-6 shadow-lg
-                bg-white dark:bg-gray-800
-                text-gray-700 dark:text-gray-200
-                border border-gray-200 dark:border-gray-700
-            ">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-900">
 
-                {/* HEADER */}
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold">Asset Detail</h3>
-                    <button
-                        onClick={onClose}
-                        className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-xl"
-                    >
-                        &times;
+                <div className="mb-5 flex items-center justify-between">
+                    <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">
+                        Item Detail
+                    </h2>
+
+                    <button onClick={onClose} className="rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-gray-800">
+                        <XMarkIcon width={20} />
                     </button>
                 </div>
 
-                {/* CONTENT (scrollable) */}
-                <div className="space-y-4 overflow-y-auto max-h-[60vh] pr-2">
-                    <DetailItem label="Item Code" value={item.item_code} />
-                    <DetailItem label="PO Number" value={item.number_po || '-'} />
-                    <DetailItem label="Descriptions" value={item.description || '-'} />
+                <div className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
+                        <label className="text-sm text-gray-500">
+                            Number PO
+                        </label>
+                        <p className="font-semibold">
+                            {item.number_po}
+                        </p>
+                    </div>
 
-                    {item.details && item.details.length > 0 && (
-                        <div>
-                            <label className="font-medium text-sm">Photos</label>
+                    <div>
+                        <label className="text-sm text-gray-500">
+                            Created By
+                        </label>
+                        <p className="font-semibold">
+                            {item.user?.name ?? "-"} - {item.name?.name ?? "-"}
+                        </p>
+                    </div>
+                </div>
 
-                            <div className="grid grid-cols-2 gap-2 mt-2">
-                                {item.details.map((detail) => (
-                                    <img
-                                        key={detail.id}
-                                        src={detail.image}
-                                        alt="Asset"
-                                        className="w-full h-40 object-cover rounded border"
-                                    />
-                                ))}
+                <div className="space-y-5">
+                    {item.details?.map((detail) => (
+                        <div key={detail.id} className="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+
+                            <div className="mb-3">
+                                <h3 className="font-semibold">
+                                    {detail.item_code}
+                                </h3>
+
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    {detail.description}
+                                </p>
                             </div>
+
+                            {detail.images && detail.images.length > 0 && (
+                                <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                                    {detail.images.map((image) => (
+                                        <img src={`/${image.image}`} className="aspect-square rounded-xl object-cover" alt={detail.item_code} />
+                                    ))}
+                                </div>
+                            )}
+
                         </div>
-                    )}
+                    ))}
                 </div>
 
-                {/* FOOTER */}
-                <div className="mt-6 flex justify-end">
-                    <button
-                        onClick={onClose}
-                        className="
-                            px-4 py-2 rounded-md font-medium
-                            bg-forest-500 hover:bg-forest-600
-                            dark:bg-forest-600 dark:hover:bg-forest-500
-                            text-white shadow
-                        "
-                    >
-                        Close
-                    </button>
-                </div>
             </div>
         </div>
     );
-};
-
-const DetailItem = ({ label, value }: { label: string; value: string | number }) => (
-    <div className="mb-3">
-        <p className="font-medium text-gray-800 dark:text-gray-300">{label}:</p>
-        <p className="text-sm text-gray-600 dark:text-gray-400 wrap-break-word">
-            {value}
-        </p>
-    </div>
-);
-
-export default ModalViewDetail;
+}
