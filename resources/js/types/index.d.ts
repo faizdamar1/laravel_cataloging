@@ -34,19 +34,27 @@ interface PreviewImage {
     compressedSize: number;
 }
 
+export interface ItemDetailImage {
+    id: number;
+    item_detail_id: number;
+    image: string;
+    created_at?: string;
+    updated_at?: string;
+}
+
 export interface ItemDetail {
     id: number;
     item_id: number;
-    image: string;
+    item_code: string;
+    description: string;
+    images?: ItemDetailImage[];
     created_at?: string;
     updated_at?: string;
 }
 
 export interface Item {
     id: number;
-    item_code: string;
     number_po: string;
-    description: string;
     details?: ItemDetail[];
     created_at?: string;
     updated_at?: string;
