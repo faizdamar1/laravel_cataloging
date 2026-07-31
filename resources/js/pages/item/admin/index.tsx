@@ -115,7 +115,7 @@ const ItemListPage = ({ items }: ItemInterface) => {
                             PO : {item.number_po}
                         </h3>
                     </div>
-                    <div className="space-y-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         {item.details?.map((detail) => (
                             <div key={detail.id} className="border-l-2 border-forest-500 pl-3">
                                 <p className="font-medium text-gray-700 dark:text-gray-300">
