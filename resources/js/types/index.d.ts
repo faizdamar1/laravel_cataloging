@@ -60,6 +60,20 @@ export interface Item {
     updated_at?: string;
 }
 
+export interface ItemDetailForm {
+    id?: number;
+    item_code: string;
+    description?: string;
+    images?: File[];
+    existing_images?: ItemDetailImage[];
+    deleted_images?: number[];
+}
+
+export interface ItemForm {
+    number_po: string;
+    details: ItemDetailForm[];
+}
+
 export interface Auth {
     user: User;
 }

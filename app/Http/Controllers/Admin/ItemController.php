@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\ItemExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreItemRequest;
 use App\Http\Requests\UpdateItemRequest;
 use App\Imports\ItemImport;
 use App\Models\Item;
 use App\Models\ItemDetail;
+use App\Services\ItemPathService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -33,22 +36,35 @@ class ItemController extends Controller
             $search = $validated['search'] ?? $defaultSearch;
             $sort = $validated['sort'] ?? $defaultSort;
             $perpage = $validated['perpage'] ?? $defaultPerPage;
+
         } catch (ValidationException $e) {
             $search = $defaultSearch;
             $sort = $defaultSort;
             $perpage = $defaultPerPage;
         }
 
-        $query = Item::with('details')
+        $query = Item::with([
+            'details.images',
+        ])
             ->when($search, function ($q) use ($search) {
+
                 $q->where(function ($q) use ($search) {
-                    $q->where('description', 'like', "%{$search}%")
-                        ->orWhere('item_code', 'like', "%{$search}%")
-                        ->orWhere('number_po', 'like', "%{$search}%");
+
+                    // cari nomor PO
+                    $q->where('number_po', 'like', "%{$search}%")
+
+                    // cari item detail
+                        ->orWhereHas('details', function ($detail) use ($search) {
+                            $detail->where('item_code', 'like', "%{$search}%")
+                                ->orWhere('description', 'like', "%{$search}%");
+                        });
+
                 });
+
             });
 
-        $items = $query->orderBy('id', $sort)
+        $items = $query
+            ->orderBy('id', $sort)
             ->paginate($perpage)
             ->withQueryString();
 
@@ -65,44 +81,67 @@ class ItemController extends Controller
     public function store(StoreItemRequest $request)
     {
         $validated = $request->validated();
+        $user = auth()->user()->load('area', 'area.names');
+        $totalSize = 0;
 
-        // 1. Grab the files using the correct, consistent input name (e.g., 'images')
-        $images = $request->file('images') ?? [];
-
-        // 2. Calculate size safely
-        $totalSize = collect($images)->sum(fn ($file) => $file->getSize());
+        foreach ($request->file('details', []) as $detail) {
+            foreach (($detail['images'] ?? []) as $image) {
+                if ($image->isValid()) {
+                    $totalSize += $image->getSize();
+                }
+            }
+        }
 
         if ($totalSize > (5 * 1024 * 1024)) {
             return back()
-                ->with('error', 'Total ukuran seluruh gambar maksimal 5 MB.')
+                ->withErrors([
+                    'details' => 'Total ukuran seluruh gambar maksimal 5 MB.',
+                ])
                 ->withInput();
         }
 
-        // 3. Create the parent item
-        $item = Item::create([
-            'item_code' => $validated['item_code'],
-            'number_po' => $validated['number_po'],
-            'description' => $validated['description'],
-        ]);
+        DB::transaction(function () use ($validated, $request, $user) {
+            $item = Item::create([
+                'user_id' => $user->id,
+                'master_name_id' => session('master_name_id'),
+                'number_po' => $validated['number_po'],
+            ]);
 
-        // 4. Process each image safely
-        foreach ($images as $image) {
-            // MUST CHECK THIS: Ensures the temp file exists and upload wasn't interrupted
-            if ($image->isValid()) {
+            foreach ($validated['details'] as $detailIndex => $detail) {
+                $itemDetail = $item->details()->create([
+                    'item_code' => $detail['item_code'],
+                    'description' => $detail['description'] ?? null,
+                ]);
 
-                $filename = time().'_'.uniqid().'.'.$image->extension();
-
-                $image->move(
-                    public_path('uploads/items'),
-                    $filename
+                $images = $request->file("details.$detailIndex.images", []);
+                $folder = ItemPathService::generate(
+                    user: $user,
+                    numberPo: $item->number_po,
+                    itemCode: $itemDetail->item_code
                 );
 
-                ItemDetail::create([
-                    'item_id' => $item->id,
-                    'image' => '/uploads/items/'.$filename,
-                ]);
+                if (! File::exists(public_path($folder))) {
+                    File::makeDirectory(public_path($folder), 0755, true);
+                }
+
+                foreach ($images as $imageIndex => $image) {
+                    if (! $image->isValid()) {
+                        continue;
+                    }
+
+                    $filename = str_pad($imageIndex + 1, 3, '0', STR_PAD_LEFT).'.'.$image->extension();
+
+                    $image->move(
+                        public_path($folder),
+                        $filename
+                    );
+
+                    $itemDetail->images()->create([
+                        'image' => $folder.'/'.$filename,
+                    ]);
+                }
             }
-        }
+        });
 
         return redirect()
             ->route('admin.item.index')

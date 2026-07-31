@@ -14,6 +14,15 @@ return new class extends Migration
         Schema::create('items', function (Blueprint $table) {
             $table->id();
             $table->string('number_po')->nullable()->index();
+
+            $table->foreignId('user_id')
+                ->constrained()
+                ->cascadeOnDelete();
+
+            $table->foreignId('master_name_id')
+                ->constrained('master_names')
+                ->cascadeOnDelete();
+
             $table->timestamps();
         });
     }

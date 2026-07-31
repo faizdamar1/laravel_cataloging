@@ -11,8 +11,8 @@ class Item extends Model
 
     protected $fillable = [
         'number_po',
-        'created_by',
-        'updated_by',
+        'user_id',
+        'master_name_id',
     ];
 
     /**
@@ -21,5 +21,15 @@ class Item extends Model
     public function details(): HasMany
     {
         return $this->hasMany(ItemDetail::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function name(): BelongsTo
+    {
+        return $this->belongsTo(MasterName::class, 'master_name_id');
     }
 }

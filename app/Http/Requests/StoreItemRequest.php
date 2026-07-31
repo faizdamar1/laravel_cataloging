@@ -17,21 +17,39 @@ class StoreItemRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'item_code' => ['required', 'string', 'max:255'],
             'number_po' => ['required', 'string', 'max:255'],
-            'description' => ['required', 'string'],
 
-            'images' => ['required', 'array', 'min:1'],
-            'images.*' => ['required', 'image', 'mimes:jpg,jpeg,png,webp'],
+            'details' => ['required', 'array', 'min:1'],
+
+            'details.*.item_code' => ['required', 'string', 'max:255'],
+            'details.*.description' => ['nullable', 'string'],
+
+            'details.*.images' => ['required', 'array', 'min:1'],
+            'details.*.images.*' => ['required', 'image', 'mimes:jpg,jpeg,png,webp'],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'images.required' => 'Minimal harus ada 1 gambar.',
-            'images.*.image' => 'File harus berupa gambar.',
-            'images.*.mimes' => 'Format gambar harus JPG, PNG atau WEBP.',
+            'number_po.required' => 'Nomor PO/OD wajib diisi.',
+
+            'details.required' => 'Minimal harus ada 1 item.',
+            'details.array' => 'Format item tidak valid.',
+            'details.min' => 'Minimal harus ada 1 item.',
+
+            'details.*.item_code.required' => 'Item Code atau Part Number wajib diisi.',
+            'details.*.item_code.max' => 'Item Code maksimal 255 karakter.',
+
+            'details.*.description.string' => 'Description tidak valid.',
+
+            'details.*.images.required' => 'Minimal harus ada 1 gambar.',
+            'details.*.images.array' => 'Format gambar tidak valid.',
+            'details.*.images.min' => 'Minimal harus ada 1 gambar.',
+
+            'details.*.images.*.required' => 'Gambar wajib diisi.',
+            'details.*.images.*.image' => 'File harus berupa gambar.',
+            'details.*.images.*.mimes' => 'Format gambar harus JPG, JPEG, PNG, atau WEBP.',
         ];
     }
 }
