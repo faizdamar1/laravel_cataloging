@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::create('items', function (Blueprint $table) {
             $table->id();
-            $table->string('item_code')->nullable()->index();
             $table->string('number_po')->nullable()->index();
             $table->text('description')->nullable();
             $table->timestamps();

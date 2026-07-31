@@ -3,15 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Item extends Model
 {
     protected $table = 'items';
 
     protected $fillable = [
-        'item_code',
         'number_po',
-        'description',
         'created_by',
         'updated_by',
     ];
@@ -19,7 +18,7 @@ class Item extends Model
     /**
      * Mendapatkan daftar detail (termasuk foto) untuk aset ini.
      */
-    public function details()
+    public function details(): HasMany
     {
         return $this->hasMany(ItemDetail::class);
     }

@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ItemDetail extends Model
 {
@@ -10,7 +12,8 @@ class ItemDetail extends Model
 
     protected $fillable = [
         'item_id',
-        'image',
+        'item_code',
+        'description',
     ];
 
     /**
@@ -19,5 +22,10 @@ class ItemDetail extends Model
     public function item(): BelongsTo
     {
         return $this->belongsTo(Item::class);
+    }
+
+    public function images(): HasMany
+    {
+        return $this->hasMany(ItemDetailImage::class);
     }
 }
