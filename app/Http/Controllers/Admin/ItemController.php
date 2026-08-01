@@ -8,7 +8,6 @@ use App\Http\Requests\StoreItemRequest;
 use App\Http\Requests\UpdateItemRequest;
 use App\Imports\ItemImport;
 use App\Models\Item;
-use App\Models\ItemDetail;
 use App\Services\ItemPathService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -152,7 +151,11 @@ class ItemController extends Controller
 
     public function edit(Item $item)
     {
-        $item = $item->load('details');
+        $item->load([
+            'details.images',
+            'user',
+            'name',
+        ]);
 
         return Inertia::render('item/admin/edit', [
             'item' => $item,
@@ -163,55 +166,120 @@ class ItemController extends Controller
     {
         $validated = $request->validated();
 
-        $item->update([
-            'item_code' => $validated['item_code'],
-            'number_po' => $validated['number_po'],
-            'description' => $validated['description'],
-        ]);
+        $user = auth()->user()->load('area');
 
-        $deletedImages = $request->input('deleted_images', []);
+        $totalSize = 0;
 
-        if (! empty($deletedImages)) {
-            $details = ItemDetail::whereIn('id', $deletedImages)
-                ->where('item_id', $item->id)
+        foreach ($request->file('details', []) as $detail) {
+            foreach (($detail['images'] ?? []) as $image) {
+                if ($image->isValid()) {
+                    $totalSize += $image->getSize();
+                }
+            }
+        }
+
+        if ($totalSize > (5 * 1024 * 1024)) {
+            return back()
+                ->withErrors([
+                    'details' => 'Total ukuran seluruh gambar maksimal 5 MB.',
+                ])
+                ->withInput();
+        }
+
+        DB::transaction(function () use ($validated, $request, $item, $user) {
+
+            $item->update([
+                'number_po' => $validated['number_po'],
+            ]);
+
+            $existingIds = [];
+
+            foreach ($validated['details'] as $detailIndex => $detailData) {
+
+                if (! empty($detailData['id'])) {
+
+                    $itemDetail = $item->details()->findOrFail($detailData['id']);
+
+                    $itemDetail->update([
+                        'item_code' => $detailData['item_code'],
+                        'description' => $detailData['description'] ?? null,
+                    ]);
+
+                } else {
+
+                    $itemDetail = $item->details()->create([
+                        'item_code' => $detailData['item_code'],
+                        'description' => $detailData['description'] ?? null,
+                    ]);
+
+                }
+
+                $existingIds[] = $itemDetail->id;
+
+                $folder = ItemPathService::generate(
+                    user: $user,
+                    numberPo: $item->number_po,
+                    itemCode: $itemDetail->item_code
+                );
+
+                if (! File::exists(public_path($folder))) {
+                    File::makeDirectory(public_path($folder), 0755, true);
+                }
+
+                $images = $request->file("details.$detailIndex.images", []);
+
+                foreach ($images as $imageIndex => $image) {
+
+                    if (! $image->isValid()) {
+                        continue;
+                    }
+
+                    $filename = uniqid().'.'.$image->extension();
+
+                    $image->move(public_path($folder), $filename);
+
+                    $itemDetail->images()->create([
+                        'image' => $folder.'/'.$filename,
+                    ]);
+                }
+
+                $deletedImages = $detailData['deleted_images'] ?? [];
+
+                if (! empty($deletedImages)) {
+
+                    $images = $itemDetail->images()->whereIn('id', $deletedImages)->get();
+
+                    foreach ($images as $img) {
+
+                        $path = public_path($img->image);
+
+                        if (File::exists($path)) {
+                            File::delete($path);
+                        }
+
+                        $img->delete();
+                    }
+                }
+            }
+
+            $deletedDetails = $item->details()
+                ->whereNotIn('id', $existingIds)
                 ->get();
 
-            foreach ($details as $detail) {
-                $filePath = public_path($detail->image);
+            foreach ($deletedDetails as $detail) {
 
-                if (File::exists($filePath)) {
-                    File::delete($filePath);
+                foreach ($detail->images as $image) {
+
+                    $path = public_path($image->image);
+
+                    if (File::exists($path)) {
+                        File::delete($path);
+                    }
                 }
 
                 $detail->delete();
             }
-        }
-
-        $images = $request->file('images') ?? [];
-
-        $totalSize = collect($images)->sum(fn ($file) => $file->getSize());
-
-        if ($totalSize > (5 * 1024 * 1024)) {
-            return back()
-                ->with('error', 'Total ukuran seluruh gambar maksimal 5 MB.')
-                ->withInput();
-        }
-
-        foreach ($images as $image) {
-            if ($image->isValid()) {
-                $filename = time().'_'.uniqid().'.'.$image->extension();
-
-                $image->move(
-                    public_path('uploads/items'),
-                    $filename
-                );
-
-                ItemDetail::create([
-                    'item_id' => $item->id,
-                    'image' => '/uploads/items/'.$filename,
-                ]);
-            }
-        }
+        });
 
         return redirect()
             ->route('admin.item.index')
@@ -220,6 +288,18 @@ class ItemController extends Controller
 
     public function destroy(Item $item)
     {
+        $item->load('details.images');
+
+        foreach ($item->details as $detail) {
+            foreach ($detail->images as $image) {
+                $path = public_path($image->image);
+
+                if (File::exists($path)) {
+                    File::delete($path);
+                }
+            }
+        }
+
         $item->delete();
 
         return redirect()->back()->with(['success' => 'Deleted item successfully']);

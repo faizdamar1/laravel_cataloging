@@ -1,6 +1,7 @@
-import { TrashIcon } from "@heroicons/react/24/outline";
-import { ItemDetailForm as ItemDetailFormType } from "@/types";
-import ImageUploader from "./image-uploader";
+import { TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { ItemDetailForm as ItemDetailFormType, ItemDetailImage } from '@/types';
+import ImageUploader from './image-uploader';
+import { InertiaFormProps } from '@inertiajs/react';
 
 interface Props {
     index: number;
@@ -8,6 +9,7 @@ interface Props {
     canRemove: boolean;
     onRemove: () => void;
     onChange: (value: ItemDetailFormType) => void;
+    errors?: InertiaFormProps<any>['errors'];
 }
 
 export default function ItemDetailForm({
@@ -16,6 +18,7 @@ export default function ItemDetailForm({
     canRemove,
     onRemove,
     onChange,
+    errors,
 }: Props) {
     return (
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-xs dark:border-gray-800 dark:bg-gray-900">
@@ -49,6 +52,11 @@ export default function ItemDetailForm({
                             placeholder="Input item code"
                             required
                         />
+                        {errors?.[`details.${index}.item_code`] && (
+                            <p className="mt-1 text-sm text-red-500">
+                                {errors[`details.${index}.item_code`]}
+                            </p>
+                        )}
                     </div>
 
                     <div>
@@ -62,6 +70,11 @@ export default function ItemDetailForm({
                             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-forest-500 focus:ring-forest-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                             placeholder="Input description"
                         />
+                        {errors?.[`details.${index}.description`] && (
+                            <p className="mt-1 text-sm text-red-500">
+                                {errors[`details.${index}.description`]}
+                            </p>
+                        )}
                     </div>
                 </div>
 
