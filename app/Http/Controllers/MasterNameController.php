@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\MasterName;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -75,5 +76,37 @@ class MasterNameController extends Controller
 
         return redirect()->route('admin.name.index')
             ->with('success', 'Nama berhasil dihapus.');
+    }
+
+    public function search(Request $request)
+    {
+        $request->validate([
+            'email' => ['required', 'email'],
+            'q' => ['nullable', 'string'],
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (! $user) {
+            return response()->json([]);
+        }
+
+        if ($user->role == 1) {
+            return response()->json([]);
+        }
+
+        $names = MasterName::query()
+            ->where('name', 'like', "%{$request->q}%")
+            ->whereHas('areas', function ($q) use ($user) {
+                $q->where('master_areas.id', $user->master_area_id);
+            })
+            ->orderBy('name')
+            ->limit(20)
+            ->get([
+                'id',
+                'name',
+            ]);
+
+        return response()->json($names);
     }
 }

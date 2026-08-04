@@ -35,13 +35,23 @@ class FortifyServiceProvider extends ServiceProvider
         $this->configureViews();
         $this->configureRateLimiting();
 
-        Fortify::loginView(function () {
-            $names = MasterName::with('areas')->get();
+        // Fortify::loginView(function () {
+        //     $names = MasterName::with('areas')->get();
 
-            return Inertia::render('auth/login', [
-                'names' => $names,
-            ]);
-        });
+        //     return Inertia::render('auth/login', [
+        //         'names' => $names,
+        //     ]);
+        // });
+
+        // Fortify::registerView(function () {
+        //     $names = MasterName::with('areas')->get();
+
+        //     dd($names);
+
+        //     return Inertia::render('auth/register', [
+        //         'names' => $names,
+        //     ]);
+        // });
 
         Fortify::authenticateUsing(function (Request $request) {
 
@@ -99,11 +109,13 @@ class FortifyServiceProvider extends ServiceProvider
      */
     private function configureViews(): void
     {
-        Fortify::loginView(fn (Request $request) => Inertia::render('auth/login', [
-            'canResetPassword' => Features::enabled(Features::resetPasswords()),
-            'canRegister' => Features::enabled(Features::registration()),
-            'status' => $request->session()->get('status'),
-        ]));
+        Fortify::loginView(function (Request $request) {
+            return Inertia::render('auth/login', [
+                'canResetPassword' => Features::enabled(Features::resetPasswords()),
+                'canRegister' => Features::enabled(Features::registration()),
+                'status' => $request->session()->get('status'),
+            ]);
+        });
 
         Fortify::resetPasswordView(fn (Request $request) => Inertia::render('auth/reset-password', [
             'email' => $request->email,

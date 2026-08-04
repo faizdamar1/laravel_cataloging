@@ -60,4 +60,6 @@ Route::middleware('auth')->group(function () {
 
 });
 
+Route::get('/login/search-name', [MasterNameController::class, 'search'])->name('login.search-name');
+
 require __DIR__.'/settings.php';
