@@ -3,9 +3,9 @@ version: '3.3'
 services:
   app:          
     build: . 
-    container_name: scanit_app
-    working_dir: /var/www/scanit
+    container_name: cataloging_app
+    working_dir: /var/www/cataloging
     volumes:
-      - /var/www/scanit:/var/www/scanit
+      - /var/www/cataloging:/var/www/cataloging
     ports:
-      - "9005:9000"
+      - "9011:9000"
