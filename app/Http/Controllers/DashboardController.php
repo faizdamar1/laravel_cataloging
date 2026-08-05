@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Item;
+use App\Models\ItemDetail;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -18,17 +18,28 @@ class DashboardController extends Controller
 
     public function welcome(Request $request)
     {
-        $items = Item::with('details')
-            ->when($request->search, function ($query, $search) {
+        $search = $request->search;
 
+        $items = ItemDetail::with([
+            'item',
+            'item.name',
+            'item.user.area',
+            'images',
+        ])
+            ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
-
                     $q->where('item_code', 'like', "%{$search}%")
-                        ->orWhere('number_po', 'like', "%{$search}%")
-                        ->orWhere('description', 'like', "%{$search}%");
-
+                        ->orWhere('description', 'like', "%{$search}%")
+                        ->orWhereHas('item', function ($itemQuery) use ($search) {
+                            $itemQuery->where('number_po', 'like', "%{$search}%")
+                                ->orWhereHas('name', function ($nameQuery) use ($search) {
+                                    $nameQuery->where('name', 'like', "%{$search}%");
+                                })
+                                ->orWhereHas('user', function ($userQuery) use ($search) {
+                                    $userQuery->where('email', 'like', "%{$search}%");
+                                });
+                        });
                 });
-
             })
             ->latest()
             ->paginate(12)
@@ -37,7 +48,7 @@ class DashboardController extends Controller
         return Inertia::render('welcome', [
             'items' => $items,
             'filters' => [
-                'search' => $request->search,
+                'search' => $search,
             ],
         ]);
     }

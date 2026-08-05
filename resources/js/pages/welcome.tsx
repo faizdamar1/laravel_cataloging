@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Box } from 'lucide-react';
-import { type SharedData, Item } from '@/types';
+import { type SharedData, ItemDetail } from '@/types';
 import { Link, router, usePage } from '@inertiajs/react';
 import { dashboard, login } from '@/routes';
 import ItemCard from './item/item-card';
@@ -8,7 +8,7 @@ import GalleryModal from './item/gallery-modal';
 
 interface WelcomeProps {
     items: {
-        data: Item[];
+        data: ItemDetail[];
     };
     filters: {
         search?: string;
@@ -17,12 +17,12 @@ interface WelcomeProps {
 
 interface GalleryState {
     isOpen: boolean;
-    item: Item | null;
+    item: ItemDetail | null;
     initialIndex: number;
 }
 
 export default function CatalogApp({ items, filters }: WelcomeProps) {
-    const catalogItems = items.data;
+    const catalogItems = items?.data ?? [];
     const { auth } = usePage<SharedData>().props;
     const [searchTerm, setSearchTerm] = useState(filters.search ?? '');
     const [galleryState, setGalleryState] = useState<GalleryState>({
@@ -31,16 +31,28 @@ export default function CatalogApp({ items, filters }: WelcomeProps) {
         initialIndex: 0,
     });
 
-    const handleSearch = (value: string) => {
-        setSearchTerm(value);
+    const executeSearch = useCallback((value: string) => {
         router.get(
             '/',
             { search: value },
             { preserveState: true, replace: true }
         );
+    }, []);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (searchTerm !== (filters.search ?? '')) {
+                executeSearch(searchTerm);
+            }
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [searchTerm, filters.search, executeSearch]);
+
+    const handleSearchChange = (value: string) => {
+        setSearchTerm(value);
     };
 
-    const openGallery = (item: Item, index: number) => {
+    const openGallery = (item: ItemDetail, index: number) => {
         setGalleryState({
             isOpen: true,
             item,
@@ -117,7 +129,7 @@ export default function CatalogApp({ items, filters }: WelcomeProps) {
                                 placeholder="Ketik kode item atau nomor PO..."
                                 className="block w-full pl-12 pr-4 py-4 rounded-2xl border-0 bg-white text-gray-900 shadow-lg focus:ring-4 focus:ring-forest-300/40 sm:text-lg focus:outline-none"
                                 value={searchTerm}
-                                onChange={(e) => handleSearch(e.target.value)}
+                                onChange={(e) => handleSearchChange(e.target.value)}
                             />
                         </div>
                     </div>
@@ -138,10 +150,10 @@ export default function CatalogApp({ items, filters }: WelcomeProps) {
 
                     {catalogItems.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                            {catalogItems.map((item) => (
+                            {catalogItems.map((detail) => (
                                 <ItemCard
-                                    key={item.id}
-                                    item={item}
+                                    key={detail.id}
+                                    item={detail}
                                     openGallery={openGallery}
                                 />
                             ))}

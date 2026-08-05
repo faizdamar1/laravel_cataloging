@@ -1,19 +1,18 @@
 import React, { useState } from 'react';
-import { Search, Image as ImageIcon, MapPin, CheckCircle2, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Item } from '@/types';
+import { Search, Image as ImageIcon, MapPin, ChevronLeft, ChevronRight, User, Building } from 'lucide-react';
+import { ItemDetail } from '@/types';
 
 interface ItemCardProps {
-    item: Item;
-    openGallery: (item: Item, index: number) => void;
+    item: ItemDetail;
+    openGallery: (item: ItemDetail, index: number) => void;
 }
 
 export default function ItemCard({ item, openGallery }: ItemCardProps) {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-
-    const hasImages = item.details && item.details.length > 0;
-    const mainImage = hasImages ? item.details![currentImageIndex].image : null;
-    const totalImages = hasImages ? item.details!.length : 0;
+    const hasImages = item.images && item.images.length > 0;
+    const mainImage = hasImages ? item.images![currentImageIndex].image : null;
+    const totalImages = hasImages ? item.images!.length : 0;
 
     const nextImage = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -27,7 +26,6 @@ export default function ItemCard({ item, openGallery }: ItemCardProps) {
 
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow flex flex-col h-full">
-
             {/* Gambar Utama / Thumbnail Slider */}
             <div
                 className="relative h-56 bg-gray-50 flex items-center justify-center group cursor-pointer"
@@ -72,8 +70,6 @@ export default function ItemCard({ item, openGallery }: ItemCardProps) {
                         <span className="text-sm font-medium">Belum ada foto</span>
                     </div>
                 )}
-
-
             </div>
 
             {/* Info Asset */}
@@ -88,11 +84,31 @@ export default function ItemCard({ item, openGallery }: ItemCardProps) {
                     {item.description}
                 </h3>
 
-                <div className="space-y-2 mt-auto">
-                    <div className="flex items-start text-sm text-gray-600">
-                        <MapPin size={14} className="mr-2 mt-0.5 shrink-0 text-forest-300" />
-                        <span className="line-clamp-1">{item.number_po}</span>
-                    </div>
+                <div className="space-y-1.5 mt-auto text-xs text-gray-600 border-t pt-3">
+                    {item.item?.number_po && (
+                        <div className="flex items-center">
+                            <MapPin size={13} className="mr-2 shrink-0 text-forest-500" />
+                            <span className="font-medium">PO:</span> <span className="ml-1 truncate">{item.item.number_po}</span>
+                        </div>
+                    )}
+                    {item.item?.name?.name && (
+                        <div className="flex items-center">
+                            <Building size={13} className="mr-2 shrink-0 text-forest-500" />
+                            <span className="font-medium">Nama:</span> <span className="ml-1 truncate">{item.item.name.name}</span>
+                        </div>
+                    )}
+                    {item.item?.user?.email && (
+                        <div className="flex items-center">
+                            <User size={13} className="mr-2 shrink-0 text-forest-500" />
+                            <span className="font-medium">Email:</span> <span className="ml-1 truncate">{item.item.user.email}</span>
+                        </div>
+                    )}
+                    {item.item?.user?.area?.name && (
+                        <div className="flex items-center">
+                            <MapPin size={13} className="mr-2 shrink-0 text-forest-500" />
+                            <span className="font-medium">Area:</span> <span className="ml-1 truncate">{item.item.user.area.name}</span>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

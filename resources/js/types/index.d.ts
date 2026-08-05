@@ -48,6 +48,7 @@ export interface ItemDetail {
     item_code: string;
     description: string;
     images?: ItemDetailImage[];
+    item?: Item;
     created_at?: string;
     updated_at?: string;
 }

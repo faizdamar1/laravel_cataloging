@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { MapPin, ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { Item } from '@/types';
+import { ItemDetail } from '@/types';
 
 interface GalleryModalProps {
-    item: Item | null;
+    item: ItemDetail | null;
     initialIndex: number;
     onClose: () => void;
 }
@@ -12,7 +12,7 @@ export default function GalleryModal({ item, initialIndex, onClose }: GalleryMod
     if (!item) return null;
 
     const [currentIndex, setCurrentIndex] = useState(initialIndex || 0);
-    const images = item.details || [];
+    const images = item.images || [];
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-forest-900/95 backdrop-blur-sm">
@@ -23,7 +23,7 @@ export default function GalleryModal({ item, initialIndex, onClose }: GalleryMod
                         <h2 className="text-2xl font-bold text-forest-100">{item.item_code}</h2>
                         <p className="text-base text-gray-200 mt-1">{item.description}</p>
                         <p className="text-sm text-gray-400 mt-1 flex items-center gap-1">
-                            <MapPin size={14} /> {item.number_po}
+                            <MapPin size={14} /> {item.item?.number_po}
                         </p>
                     </div>
                     <button
@@ -67,14 +67,16 @@ export default function GalleryModal({ item, initialIndex, onClose }: GalleryMod
                 {/* List Thumbnail */}
                 {images.length > 1 && (
                     <div className="flex gap-3 mt-6 overflow-x-auto pb-2 justify-center">
-                        {images.map((detail, idx) => (
+                        {images.map((img, idx) => (
                             <button
-                                key={detail.id}
+                                key={img.id}
                                 onClick={() => setCurrentIndex(idx)}
-                                className={`shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 transition-all ${currentIndex === idx ? 'border-forest-3000 opacity-100 scale-105 shadow-[0_0_15px_rgba(107,201,173,0.5)]' : 'border-transparent opacity-40 hover:opacity-100'
+                                className={`shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 transition-all ${currentIndex === idx
+                                    ? 'border-forest-400 opacity-100 scale-105 shadow-[0_0_15px_rgba(107,201,173,0.5)]'
+                                    : 'border-transparent opacity-40 hover:opacity-100'
                                     }`}
                             >
-                                <img src={detail.image} alt={`Thumb ${idx}`} className="w-full h-full object-cover" />
+                                <img src={img.image} alt={`Thumb ${idx}`} className="w-full h-full object-cover" />
                             </button>
                         ))}
                     </div>
