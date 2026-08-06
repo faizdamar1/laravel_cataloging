@@ -56,14 +56,14 @@ export default function ItemDetailForm({
                                 value={detail.item_code}
                                 onChange={(e) => onChange({ ...detail, item_code: e.target.value })}
                                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-forest-500 focus:ring-forest-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-                                placeholder="Input item code"
+                                placeholder="Input Item Code / Part Number"
                                 required
                             />
                             <button
                                 type="button"
                                 onClick={() => setIsScannerOpen(true)}
                                 className="flex items-center justify-center rounded-lg bg-gray-100 px-3 text-gray-600 transition hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
-                                title="Scan Item Code"
+                                title="Scan Item Code / Part Number"
                             >
                                 <QrCodeIcon className="h-5 w-5" strokeWidth={2} />
                             </button>

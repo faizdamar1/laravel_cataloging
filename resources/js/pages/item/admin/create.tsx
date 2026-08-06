@@ -70,7 +70,7 @@ export default function CreateItem() {
                     {/* PO NUMBER */}
                     <div>
                         <label className="mb-2 block text-sm font-semibold text-gray-800 dark:text-gray-200">
-                            PO Number
+                            PO/OD Number
                         </label>
 
                         <div className="flex gap-2">
@@ -79,14 +79,14 @@ export default function CreateItem() {
                                 value={data.number_po}
                                 onChange={(e) => setData("number_po", e.target.value)}
                                 className="w-full rounded-xl border border-gray-300 p-3 focus:border-forest-500 focus:ring-forest-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-                                placeholder="Input PO Number"
+                                placeholder="Input PO/OD Number"
                                 required
                             />
                             <button
                                 type="button"
                                 onClick={() => setIsPoScannerOpen(true)}
                                 className="flex items-center justify-center rounded-xl bg-forest-100 px-4 text-forest-600 transition hover:bg-forest-200 dark:bg-forest-900/30 dark:text-forest-400"
-                                title="Scan PO Number"
+                                title="Scan PO/OD Number"
                             >
                                 <QrCodeIcon className="h-6 w-6" strokeWidth={2} />
                             </button>

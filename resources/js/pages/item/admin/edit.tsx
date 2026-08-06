@@ -90,7 +90,7 @@ const EditItem = ({ item }: Props) => {
                 <form onSubmit={onSubmit} className="space-y-6">
                     <div>
                         <label className="mb-2 block text-sm font-semibold text-gray-800 dark:text-gray-200">
-                            PO Number
+                            PO/OD Number
                         </label>
 
                         <input
@@ -98,7 +98,7 @@ const EditItem = ({ item }: Props) => {
                             value={data.number_po}
                             onChange={(e) => setData('number_po', e.target.value)}
                             className="w-full rounded-xl border border-gray-300 p-3 text-sm focus:border-forest-500 focus:ring-forest-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-                            placeholder="Input PO Number"
+                            placeholder="Input PO/OD Number"
                             required
                         />
 
