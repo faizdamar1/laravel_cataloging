@@ -42,6 +42,8 @@ class ItemController extends Controller
             $perpage = $defaultPerPage;
         }
 
+        $user = auth()->user();
+
         $query = Item::with([
             'user',
             'name',
@@ -62,7 +64,7 @@ class ItemController extends Controller
 
                 });
 
-            });
+            })->where('user_id', $user->id);
 
         $items = $query
             ->orderBy('id', $sort)
